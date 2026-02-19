@@ -24,10 +24,8 @@
   .pile-slot.hint-glow,.tableau-col.hint-glow{border-color:#22d3ee!important;animation:hpulse .7s ease-in-out infinite alternate}
   @keyframes hpulse{from{box-shadow:0 0 0 3px #22d3ee}to{box-shadow:0 0 0 6px #0ea5e9,0 0 22px rgba(14,165,233,.5)}}
   .card-fly{position:fixed;z-index:9999;pointer-events:none;will-change:transform;transition:transform .25s cubic-bezier(.4,0,.2,1)}
-
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#1a6b3a;color:#fff;min-height:100vh;user-select:none;-webkit-user-select:none;touch-action:manipulation}
   .hidden{display:none!important}
-
   .name-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at center,#236b45 0%,#0d3a20 100%)}
   .name-card{background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:48px 40px;text-align:center;width:min(400px,90vw);backdrop-filter:blur(12px)}
   .name-card h1{font-size:2rem;margin-bottom:10px}
@@ -42,7 +40,6 @@
   .btn-secondary:hover{background:rgba(255,255,255,.25)}
   .stats-link{display:inline-block;margin-top:16px;color:rgba(255,255,255,.6);text-decoration:none;font-size:.95rem;transition:color .2s}
   .stats-link:hover{color:#fff}
-
   .game-screen{display:flex;flex-direction:column;height:100vh;max-height:100vh;background:#1a6b3a}
   .game-header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:rgba(0,0,0,.3);border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0;gap:8px}
   .header-stat{display:flex;flex-direction:column;align-items:flex-start;min-width:70px}
@@ -52,26 +49,20 @@
   .stat-value{font-size:1.35rem;font-weight:700}
   .header-stats-link{display:flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#fff;text-decoration:none;font-size:.8rem;font-weight:600;transition:background .2s;white-space:nowrap}
   .header-stats-link:hover{background:rgba(255,255,255,.2)}
-
   .game-area{flex:1;overflow-y:auto;padding:12px 8px 4px;display:flex;flex-direction:column;gap:12px}
   .top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
   .foundations-row{display:flex;gap:6px}
-  /* Колода справа, отбой левее неё */
   .stock-area{display:flex;flex-direction:row-reverse;gap:6px;align-items:flex-start}
-
   .pile-slot{width:72px;height:104px;border-radius:9px;border:2px dashed rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:border-color .2s;position:relative}
   .pile-slot:hover{border-color:rgba(255,255,255,.5)}
   .pile-suit{font-size:2rem;opacity:.28}
   .pile-empty-icon{font-size:1.4rem;opacity:.32;font-weight:700}
-
   .waste-wrap{position:relative;height:104px;flex-shrink:0}
   .waste-wrap .card{position:absolute;top:0}
-
   .tableau-row{display:flex;gap:6px;justify-content:center;padding-bottom:20px}
   .tableau-col{position:relative;width:72px;min-height:104px;flex-shrink:0}
   .tableau-col-bg{position:absolute;inset:0;border-radius:9px;border:2px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;pointer-events:none}
   .pile-slot.drop-ok,.tableau-col.drop-ok{border-color:#22d3ee!important;border-style:solid!important}
-
   .game-footer{display:flex;gap:8px;padding:10px 12px 14px;background:rgba(0,0,0,.3);border-top:1px solid rgba(255,255,255,.1);flex-shrink:0}
   .footer-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:9px 4px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:14px;color:#fff;font-size:.78rem;font-weight:600;cursor:pointer;transition:background .2s,transform .1s}
   .footer-btn:hover{background:rgba(255,255,255,.2)}
@@ -79,7 +70,6 @@
   .footer-btn.primary{background:rgba(245,166,35,.3);border-color:rgba(245,166,35,.5)}
   .footer-btn.primary:hover{background:rgba(245,166,35,.45)}
   .btn-icon{font-size:1.35rem}
-
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
   .modal-content{background:linear-gradient(145deg,#1e4d30,#153a23);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:34px 30px;text-align:center;width:min(360px,88vw);box-shadow:0 24px 60px rgba(0,0,0,.6)}
   .modal-content.sm{padding:26px 22px}
@@ -94,12 +84,10 @@
   .modal-btns .btn-primary{width:auto;padding:10px 22px}
   .modal-btns .btn-secondary{padding:10px 22px}
   .dragging{opacity:.3!important}
-
   @media(max-width:500px){
     .pile-slot{width:46px;height:68px}
     .waste-wrap{height:68px}
     .tableau-col{width:46px;min-height:68px}
-    .tableau-col-bg{border-radius:6px}
     .tableau-row,.foundations-row,.stock-area,.top-row{gap:3px}
     .cc .r{font-size:.6rem}
     .cc .s{font-size:.55rem}
@@ -134,7 +122,6 @@
     </div>
     <a href="stats.html" class="header-stats-link">📊 Рейтинг</a>
   </header>
-
   <main class="game-area">
     <div class="top-row">
       <div class="foundations-row">
@@ -143,7 +130,6 @@
         <div class="pile-slot" id="f2"><span class="pile-suit">♦</span></div>
         <div class="pile-slot" id="f3"><span class="pile-suit">♣</span></div>
       </div>
-      <!-- stock-area: flex-direction:row-reverse → колода справа, отбой слева -->
       <div class="stock-area">
         <div class="pile-slot" id="stock"><span class="pile-empty-icon">↺</span></div>
         <div class="waste-wrap" id="waste"></div>
@@ -151,7 +137,6 @@
     </div>
     <div class="tableau-row" id="tableau"></div>
   </main>
-
   <footer class="game-footer">
     <button class="footer-btn" id="undo-btn"><span class="btn-icon">↩</span><span>Отмена</span></button>
     <button class="footer-btn primary" id="new-game-btn"><span class="btn-icon">🃏</span><span>Новая игра</span></button>
@@ -162,8 +147,7 @@
 <!-- Победа -->
 <div id="win-modal" class="modal hidden">
   <div class="modal-content">
-    <div class="win-emoji">🎉</div>
-    <h2>Победа!</h2>
+    <div class="win-emoji">🎉</div><h2>Победа!</h2>
     <div class="win-stats">
       <div class="win-stat"><span>Очки</span><strong id="win-score"></strong></div>
       <div class="win-stat"><span>Время</span><strong id="win-time"></strong></div>
@@ -209,10 +193,9 @@ const SUPABASE_KEY = 'sb_publishable_YxIguOiNADys-g1G6teUwA_qtKYEV6e';
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── КОНСТАНТЫ ───────────────────────────────────────────
-const SUITS = ['♠','♥','♦','♣'];
-const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-const RED   = new Set(['♥','♦']);
+const SUITS  = ['♠','♥','♦','♣'];
+const RANKS  = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const RED    = new Set(['♥','♦']);
 const ROYALS = {
   'J♠':'🧙','J♥':'🤴','J♦':'🤵','J♣':'🧝',
   'Q♠':'👸','Q♥':'👩‍🦰','Q♦':'🧝‍♀️','Q♣':'🧜‍♀️',
@@ -227,7 +210,6 @@ const OV  = () => window.innerWidth <= 500 ? 20 : 28;
 const WOF = () => window.innerWidth <= 500 ? 13 : 18;
 const SC  = { W2T:5, W2F:10, T2F:10, FLIP:5, STOCK:-2, F2T:-15 };
 
-// ── СОСТОЯНИЕ ───────────────────────────────────────────
 let playerName='', playerId=null;
 let stock=[], waste=[], found=[[],[],[],[]], tab=[[],[],[],[],[],[],[]];
 let score=0, moves=0, secs=0;
@@ -258,7 +240,7 @@ function updateTimer(){
     String(Math.floor(secs/60)).padStart(2,'0')+':'+String(secs%60).padStart(2,'0');
 }
 
-// ── СОЗДАНИЕ КАРТЫ ──────────────────────────────────────
+// ── КАРТОЧНЫЙ ЭЛЕМЕНТ ────────────────────────────────────
 function mkCard(card){
   const cw=CW(), ch=CH();
   const el=document.createElement('div');
@@ -295,13 +277,11 @@ function renderStock(){
   } else {
     el.innerHTML='<span class="pile-empty-icon">↺</span>';
   }
-  // убираем старые слушатели через замену узла — просто переназначаем onclick
   el.onclick=onStockClick;
 }
 
 function onStockClick(){
   clearHints(); clearSel(); snap();
-  // Всегда открываем ОДНУ карту
   if(!stock.length){
     stock=waste.slice().reverse().map(c=>({...c,up:false}));
     waste=[]; moves++; render(); return;
@@ -314,7 +294,6 @@ function renderWaste(){
   const cont=document.getElementById('waste'); cont.innerHTML='';
   const cw=CW(), wof=WOF(), show=Math.min(3,waste.length);
   cont.style.width=cw+(show>1?(show-1)*wof:0)+'px';
-  // Показываем до 3 карт лесенкой (только верхние видны по углу)
   for(let i=show-1;i>=0;i--){
     const card=waste[waste.length-1-i];
     const el=mkCard(card); el.style.position='absolute';
@@ -366,7 +345,7 @@ function renderTab(){
       cards=>canT(cards[0],col),
       ()=>{
         if(!sel)return;
-        snap(); const from=sel,cards=sel.cards;
+        snap(); const from=sel, cards=sel.cards;
         removeFrom(from); tab[col].push(...cards);
         if(from.fromPile==='waste')score+=SC.W2T;
         else if(from.fromPile==='foundation')score=Math.max(0,score+SC.F2T);
@@ -381,34 +360,37 @@ function renderTab(){
   }
 }
 
-// ── КЛИКИ: ЛОГИКА АВТОХОДА ───────────────────────────────
-// Приоритет: фундамент → другая колонка
-function tryAutoMove(card, fromPile, fromIdx, onMoved){
-  // 1. Попробовать фундамент (только одиночная карта)
-  for(let i=0;i<4;i++){
-    if(canF(card,i)){
-      onMoved('foundation', i);
-      return true;
+// ── АВТОХОД ─────────────────────────────────────────────
+// fromRow нужен чтобы не двигать Короля без смысла
+function tryAutoMove(group, fromPile, fromIdx, fromRow, onMoved){
+  const card = group[0];
+
+  // Одиночная → сначала фундамент
+  if(group.length === 1){
+    for(let i=0;i<4;i++){
+      if(canF(card,i)){ onMoved('foundation',i); return true; }
     }
   }
-  // 2. Попробовать tableau
+
+  // Tableau — ищем первую подходящую колонку
   for(let c=0;c<7;c++){
-    if(fromPile==='tableau'&&c===fromIdx) continue; // не в ту же колонку
+    if(fromPile==='tableau' && c===fromIdx) continue; // та же колонка — пропуск
     if(canT(card,c)){
-      onMoved('tableau', c);
+      // Бессмысленный ход: Король на пустую колонку без скрытых карт снизу
+      if(card.rank==='K' && !tab[c].length && fromPile==='tableau' && fromRow===0) continue;
+      onMoved('tableau',c);
       return true;
     }
   }
   return false;
 }
 
+// ── КЛИК: WASTE ─────────────────────────────────────────
 function onWasteClick(el,card){
   clearHints();
-  // Если уже выделена другая карта из waste — снять
-  if(sel?.fromPile==='waste'){clearSel();}
+  if(sel?.fromPile==='waste'){ clearSel(); return; }
 
-  // Автоход
-  const moved=tryAutoMove(card,'waste',-1,(destType,destIdx)=>{
+  const moved = tryAutoMove([card],'waste',-1,0,(destType,destIdx)=>{
     if(destType==='foundation'){
       fly(el,document.getElementById('f'+destIdx),()=>{
         snap(); waste.pop(); found[destIdx].push(card);
@@ -423,26 +405,23 @@ function onWasteClick(el,card){
   });
 
   if(!moved){
-    // Некуда — просто выделить
     el.classList.add('selected');
     sel={cards:[card],fromPile:'waste',fromIdx:-1};
   }
 }
 
+// ── КЛИК: TABLEAU ────────────────────────────────────────
 function onTabClick(col,row){
   clearHints();
   const card=tab[col][row];
 
-  // Есть выделенная карта — пытаемся положить на текущую колонку
+  // Есть активное выделение — пытаемся положить на эту колонку
   if(sel){
-    if(sel.fromPile==='tableau'&&sel.fromIdx===col){
-      // Клик на ту же колонку — снять выделение
-      clearSel(); return;
-    }
+    if(sel.fromPile==='tableau' && sel.fromIdx===col){ clearSel(); return; }
     if(canT(sel.cards[0],col)){
       const srcEl=getSelEl();
       fly(srcEl,tabColEl(col),()=>{
-        snap(); const from=sel,cards=sel.cards;
+        snap(); const from=sel, cards=sel.cards;
         removeFrom(from); tab[col].push(...cards);
         if(from.fromPile==='waste')score+=SC.W2T;
         else if(from.fromPile==='foundation')score=Math.max(0,score+SC.F2T);
@@ -450,7 +429,6 @@ function onTabClick(col,row){
       });
       return;
     }
-    // Нельзя положить — снимаем выделение, дальше выбираем новую карту
     clearSel();
     if(!card.up) return;
   }
@@ -458,37 +436,43 @@ function onTabClick(col,row){
   if(!card.up) return;
   const group=tab[col].slice(row);
 
-  // Одиночная карта → автоход
-  if(group.length===1){
-    const allEls=Array.from(tabColEl(col).querySelectorAll('.card'));
-    const topEl=allEls[allEls.length-1];
-    const moved=tryAutoMove(card,'tableau',col,(destType,destIdx)=>{
-      fly(topEl, destType==='foundation'?document.getElementById('f'+destIdx):tabColEl(destIdx), ()=>{
-        snap();
-        tab[col].pop();
-        if(tab[col].length>0&&!tab[col][tab[col].length-1].up){
-          tab[col][tab[col].length-1].up=true; score+=SC.FLIP;
-        }
-        if(destType==='foundation'){found[destIdx].push(card);score+=SC.T2F;checkWin();}
-        else{tab[destIdx].push(card);if(/*from waste*/false)score+=SC.W2T;}
-        moves++; render(); checkAuto();
-      });
-    });
-    if(moved) return;
-  }
-
-  // Группа или нет хода → выделить
+  // Автоход группы (одиночная или стопка)
   const allEls=Array.from(tabColEl(col).querySelectorAll('.card'));
-  const faceN=tab[col].filter(c=>!c.up).length;
-  allEls.slice(faceN+(row-faceN)).forEach(e=>e.classList.add('selected'));
-  sel={cards:group,fromPile:'tableau',fromIdx:col};
+  const srcEl=allEls[row]; // верхний элемент группы
+  const moved=tryAutoMove(group,'tableau',col,row,(destType,destIdx)=>{
+    fly(srcEl, destType==='foundation'
+          ? document.getElementById('f'+destIdx)
+          : tabColEl(destIdx),
+    ()=>{
+      snap();
+      // Убираем группу из колонки
+      tab[col]=tab[col].slice(0,row);
+      if(tab[col].length>0 && !tab[col][tab[col].length-1].up){
+        tab[col][tab[col].length-1].up=true; score+=SC.FLIP;
+      }
+      if(destType==='foundation'){
+        found[destIdx].push(card); score+=SC.T2F; checkWin();
+      } else {
+        tab[destIdx].push(...group);
+      }
+      moves++; render(); checkAuto();
+    });
+  });
+
+  if(!moved){
+    // Выделить группу визуально
+    const faceN=tab[col].filter(c=>!c.up).length;
+    allEls.slice(faceN+(row-faceN)).forEach(e=>e.classList.add('selected'));
+    sel={cards:group,fromPile:'tableau',fromIdx:col};
+  }
 }
 
+// ── КЛИК: ПУСТАЯ КОЛОНКА ────────────────────────────────
 function onTabEmpty(col){
   if(!sel) return;
   if(canT(sel.cards[0],col)){
     fly(getSelEl(),tabColEl(col),()=>{
-      snap(); const from=sel,cards=sel.cards;
+      snap(); const from=sel, cards=sel.cards;
       removeFrom(from); tab[col].push(...cards);
       if(from.fromPile==='waste')score+=SC.W2T;
       else if(from.fromPile==='foundation')score=Math.max(0,score+SC.F2T);
@@ -497,9 +481,10 @@ function onTabEmpty(col){
   } else clearSel();
 }
 
+// ── КЛИК: ФУНДАМЕНТ ─────────────────────────────────────
 function onFoundClick(i){
   if(!sel) return;
-  if(sel.cards.length!==1){clearSel();return;}
+  if(sel.cards.length!==1){ clearSel(); return; }
   const card=sel.cards[0];
   if(canF(card,i)) doF(card,i,sel.fromPile,sel.fromIdx); else clearSel();
 }
@@ -507,7 +492,7 @@ function onFoundClick(i){
 function doF(card,fi,fromPile,fromIdx){
   fly(getSelEl(),document.getElementById('f'+fi),()=>{
     snap();
-    if(fromPile==='waste'){waste.pop();score+=SC.W2F;}
+    if(fromPile==='waste'){ waste.pop(); score+=SC.W2F; }
     else if(fromPile==='tableau'){
       tab[fromIdx].pop();
       if(tab[fromIdx].length>0&&!tab[fromIdx][tab[fromIdx].length-1].up){
@@ -520,14 +505,14 @@ function doF(card,fi,fromPile,fromIdx){
 }
 
 function removeFrom(from){
-  if(from.fromPile==='waste'){waste.pop();}
+  if(from.fromPile==='waste'){ waste.pop(); }
   else if(from.fromPile==='tableau'){
     const col=from.fromIdx;
     tab[col]=tab[col].slice(0,tab[col].length-from.cards.length);
     if(tab[col].length>0&&!tab[col][tab[col].length-1].up){
       tab[col][tab[col].length-1].up=true; score+=SC.FLIP;
     }
-  } else if(from.fromPile==='foundation'){found[from.fromIdx].pop();}
+  } else if(from.fromPile==='foundation'){ found[from.fromIdx].pop(); }
 }
 
 // ── ПРАВИЛА ─────────────────────────────────────────────
@@ -535,14 +520,14 @@ function canF(card,i){
   const p=found[i];
   if(!p.length) return card.rank==='A';
   const t=p[p.length-1];
-  return t.suit===card.suit&&ri(card.rank)===ri(t.rank)+1;
+  return t.suit===card.suit && ri(card.rank)===ri(t.rank)+1;
 }
 function canT(card,col){
   const p=tab[col];
   if(!p.length) return card.rank==='K';
   const t=p[p.length-1];
   if(!t.up) return false;
-  return isRed(card.suit)!==isRed(t.suit)&&ri(card.rank)===ri(t.rank)-1;
+  return isRed(card.suit)!==isRed(t.suit) && ri(card.rank)===ri(t.rank)-1;
 }
 
 // ── УТИЛИТЫ ─────────────────────────────────────────────
@@ -551,7 +536,7 @@ function clearHints(){hintEls.forEach(e=>e&&e.classList.remove('hint-glow'));hin
 function getSelEl(){return document.querySelector('.card.selected');}
 function tabColEl(col){return document.querySelectorAll('.tableau-col')[col];}
 
-// ── АНИМАЦИЯ (transform) ─────────────────────────────────
+// ── АНИМАЦИЯ ─────────────────────────────────────────────
 function fly(srcEl,tgtEl,cb){
   if(!srcEl){cb();return;}
   const sr=srcEl.getBoundingClientRect();
@@ -574,7 +559,6 @@ function fly(srcEl,tgtEl,cb){
 
 // ── POINTER/TOUCH DRAG ───────────────────────────────────
 function setupPointerDrag(el,cards,fromPile,fromIdx){
-  // Mouse drag
   el.setAttribute('draggable','true');
   el.addEventListener('dragstart',e=>{
     e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text','d');
@@ -587,19 +571,15 @@ function setupPointerDrag(el,cards,fromPile,fromIdx){
     if(sel)clearSel();
   });
 
-  // Touch drag (iPad)
   let tGhost=null, t0x=0, t0y=0, t0l=0, t0t=0;
   el.addEventListener('touchstart',e=>{
     if(e.touches.length!==1)return;
-    const t=e.touches[0];
-    t0x=t.clientX; t0y=t.clientY;
-    const sr=el.getBoundingClientRect();
-    t0l=sr.left; t0t=sr.top;
+    const t=e.touches[0]; t0x=t.clientX; t0y=t.clientY;
+    const sr=el.getBoundingClientRect(); t0l=sr.left; t0t=sr.top;
     clearHints(); clearSel(); sel={cards,fromPile,fromIdx};
     tGhost=el.cloneNode(true);
     tGhost.classList.remove('selected','hint-glow','dragging');
-    tGhost.style.cssText='position:fixed;z-index:8888;pointer-events:none;opacity:.85;transition:none;margin:0;'+
-      'width:'+sr.width+'px;height:'+sr.height+'px;left:'+sr.left+'px;top:'+sr.top+'px;';
+    tGhost.style.cssText='position:fixed;z-index:8888;pointer-events:none;opacity:.85;transition:none;margin:0;width:'+sr.width+'px;height:'+sr.height+'px;left:'+sr.left+'px;top:'+sr.top+'px;';
     document.body.appendChild(tGhost);
     el.style.opacity='.3';
   },{passive:true});
@@ -622,8 +602,7 @@ function setupPointerDrag(el,cards,fromPile,fromIdx){
     const t=e.changedTouches[0];
     tGhost.style.display='none';
     const under=document.elementFromPoint(t.clientX,t.clientY);
-    tGhost.remove(); tGhost=null;
-    el.style.opacity='';
+    tGhost.remove(); tGhost=null; el.style.opacity='';
     document.querySelectorAll('.drop-ok').forEach(e=>e.classList.remove('drop-ok'));
     const dropEl=under?.closest('.pile-slot,.tableau-col');
     if(dropEl&&sel) executeDrop(dropEl,sel.cards); else clearSel();
@@ -639,7 +618,7 @@ function canDropOnEl(el,cards){
 function executeDrop(dropEl,cards){
   if(dropEl.id&&/^f\d$/.test(dropEl.id)){
     const i=+dropEl.id[1];
-    if(cards.length===1&&canF(cards[0],i))doF(cards[0],i,sel.fromPile,sel.fromIdx); else clearSel();
+    if(cards.length===1&&canF(cards[0],i)) doF(cards[0],i,sel.fromPile,sel.fromIdx); else clearSel();
     return;
   }
   const col=+dropEl.dataset.col;
@@ -662,7 +641,7 @@ document.getElementById('hint-btn').addEventListener('click',()=>{
   clearSel(); clearHints();
   const hint=findHint();
   if(!hint){
-    // Нет ходов — проигрыш
+    // Нет ходов → записать проигрыш и предложить новую игру
     saveGame(Math.max(0,score),false);
     showCfg('😔','Нет ходов','Доступных ходов больше нет. Партия проиграна.','Новая игра','Остаться',()=>deal(),null);
     return;
@@ -677,23 +656,35 @@ function findHint(){
   const fEl=i=>document.getElementById('f'+i);
   const wTopEl=()=>{const cs=document.getElementById('waste').querySelectorAll('.card');return cs.length?[cs[cs.length-1]]:null;};
   const tTopEl=col=>{const cs=Array.from(tabColEl(col).querySelectorAll('.card')).filter(e=>!e.querySelector('.card-back'));return cs.length?[cs[cs.length-1]]:null;};
-  const tGrpEls=(col,row)=>{const all=Array.from(tabColEl(col).querySelectorAll('.card'));const fn=tab[col].filter(c=>!c.up).length;return all.slice(fn+(row-fn));};
+  // FIX: упрощённая выборка — просто all.slice(row)
+  const tGrpEls=(col,row)=>Array.from(tabColEl(col).querySelectorAll('.card')).slice(row);
 
+  // 1. Waste → фундамент
   if(waste.length>0){const cd=waste[waste.length-1];for(let i=0;i<4;i++)if(canF(cd,i))return{src:wTopEl(),tgt:fEl(i)};}
+  // 2. Tableau → фундамент
   for(let c=0;c<7;c++){if(!tab[c].length)continue;const cd=tab[c][tab[c].length-1];if(!cd.up)continue;for(let i=0;i<4;i++)if(canF(cd,i))return{src:tTopEl(c),tgt:fEl(i)};}
+  // 3. Предложить открыть колоду
   if(stock.length>0)return{src:[document.getElementById('stock')],tgt:null};
+  // 4. Переработать отбой (FIX: не объявлять проигрыш если есть непросмотренный отбой)
+  if(!stock.length && waste.length>0)return{src:[document.getElementById('stock')],tgt:null};
+  // 5. Waste → tableau
   if(waste.length>0){const cd=waste[waste.length-1];for(let c=0;c<7;c++)if(canT(cd,c))return{src:wTopEl(),tgt:tcols[c]};}
+  // 6. Tableau → tableau
   for(let fc=0;fc<7;fc++)for(let row=0;row<tab[fc].length;row++){
     const cd=tab[fc][row]; if(!cd.up) continue;
     for(let tc=0;tc<7;tc++){
       if(tc===fc) continue;
       if(canT(cd,tc)){
-        const rev=row>0&&!tab[fc][row-1].up;
-        const ke=cd.rank==='K'&&!tab[tc].length;
-        if(rev||ke||(row===tab[fc].length-1))return{src:tGrpEls(fc,row),tgt:tcols[tc]};
+        const hasFaceDown=row>0&&!tab[fc][row-1].up;
+        // FIX: Король на пустую колонку только если есть скрытые карты снизу
+        const kingToEmpty=cd.rank==='K' && !tab[tc].length;
+        if(kingToEmpty && row===0) continue; // бессмысленный ход
+        if(hasFaceDown || kingToEmpty || row===tab[fc].length-1)
+          return{src:tGrpEls(fc,row),tgt:tcols[tc]};
       }
     }
   }
+  // 7. Фундамент → tableau
   for(let fi=0;fi<4;fi++){if(!found[fi].length)continue;const cd=found[fi][found[fi].length-1];for(let c=0;c<7;c++)if(canT(cd,c))return{src:[fEl(fi)],tgt:tcols[c]};}
   return null;
 }
@@ -723,9 +714,8 @@ function runAuto(){
   step();
 }
 
-// ── ПОБЕДА / ПОРАЖЕНИЕ ───────────────────────────────────
+// ── ПОБЕДА ───────────────────────────────────────────────
 function checkWin(){if(found.reduce((s,f)=>s+f.length,0)===52)finishWin();}
-
 function finishWin(){
   clearInterval(tint);
   const bonus=Math.max(0,Math.round(700000/Math.max(secs,1)));
@@ -758,7 +748,9 @@ document.getElementById('undo-btn').addEventListener('click',()=>{
 });
 document.getElementById('new-game-btn').addEventListener('click',()=>{
   clearHints(); clearSel();
-  showCfg('🔄','Новая игра?','Текущая партия будет завершена без сохранения.','Да, начать','Отмена',()=>deal(),null);
+  // FIX: сохраняем текущую партию как незавершённую перед новой
+  showCfg('🔄','Новая игра?','Текущая партия будет засчитана как проигрыш.','Да, начать','Отмена',
+    ()=>{ saveGame(Math.max(0,score),false); deal(); }, null);
 });
 document.getElementById('win-new-game').addEventListener('click',()=>{document.getElementById('win-modal').classList.add('hidden');deal();});
 

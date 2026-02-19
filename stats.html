@@ -46,7 +46,7 @@
   function fmt(s){if(!s&&s!==0)return'—';return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
   async function loadLeaderboard(){
     const{data:games}=await db.from('games').select('player_id,score,duration_seconds,moves,completed,players(name)');
-    if(!games||!games.length){['leaderboard-body','podium','records-cards'].forEach(id=>{const el=document.getElementById(id);el.innerHTML='<div class="loading-msg">Нет данных. Сыграйте первую партию!</div>';});return;}
+    if(!games||!games.length){['leaderboard-body','podium','records-cards'].forEach(id=>{document.getElementById(id).innerHTML='<div class="loading-msg">Нет данных. Сыграйте первую партию!</div>';});return;}
     const pl={};
     for(const g of games){const n=g.players?.name||'Unknown';if(!pl[n])pl[n]={name:n,scores:[],wins:[],all:[]};pl[n].all.push(g);if(g.completed)pl[n].wins.push(g);pl[n].scores.push(g.score);}
     const rows=Object.values(pl).map(p=>({name:p.name,bestScore:Math.max(...p.scores),wins:p.wins.length,total:p.all.length,winPct:Math.round((p.wins.length/p.all.length)*100),minMoves:p.wins.length?Math.min(...p.wins.map(g=>g.moves)):null,fastestWin:p.wins.length?Math.min(...p.wins.map(g=>g.duration_seconds)):null})).sort((a,b)=>b.bestScore-a.bestScore);
