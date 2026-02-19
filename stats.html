@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Статистика — Klondike Solitaire</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
   <div class="stats-page">
@@ -31,22 +31,16 @@
     <section class="stats-section">
       <h2>🔍 Профиль игрока</h2>
       <div class="player-search">
-        <input type="text" id="search-input" placeholder="Введите имя игрока" />
+        <input type="text" id="search-input" placeholder="Введите имя игрока"/>
         <button class="btn-primary" id="search-btn">Найти</button>
       </div>
       <div id="player-profile" class="player-profile hidden"></div>
     </section>
   </div>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-  // =============================================
-  //  КОНФИГУРАЦИЯ SUPABASE
-  //  ▼▼▼ ЗАМЕНИТЕ ЭТИ ЗНАЧЕНИЯ НА СВОИ ▼▼▼
-  // =============================================
-  const SUPABASE_URL = 'https://ncdajiaffqbmqamrpsfz.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_YxIguOiNADys-g1G6teUwA_qtKYEV6e';
-  // =============================================
+  const SUPABASE_URL = 'https://ncdajiaffqbmqamrpsfz.supabase.co'
+  const SUPABASE_KEY = 'sb_publishable_YxIguOiNADys-g1G6teUwA_qtKYEV6e'
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -55,9 +49,7 @@
   async function loadLeaderboard(){
     const{data:games}=await db.from('games').select('player_id,score,duration_seconds,moves,completed,players(name)');
     if(!games||!games.length){
-      document.getElementById('leaderboard-body').innerHTML='<tr><td colspan="7" class="loading-msg">Нет данных. Сыграйте первую партию!</td></tr>';
-      document.getElementById('podium').innerHTML='<div class="loading-msg">Нет данных</div>';
-      document.getElementById('records-cards').innerHTML='<div class="loading-msg">Нет данных</div>';
+      ['leaderboard-body','podium','records-cards'].forEach(id=>document.getElementById(id).innerHTML='<div class="loading-msg">Нет данных. Сыграйте первую партию!</div>');
       return;
     }
     const players={};
@@ -69,8 +61,7 @@
       players[name].scores.push(g.score);
     }
     const rows=Object.values(players).map(p=>({
-      name:p.name, bestScore:Math.max(...p.scores),
-      wins:p.wins.length, total:p.all.length,
+      name:p.name,bestScore:Math.max(...p.scores),wins:p.wins.length,total:p.all.length,
       winPct:Math.round((p.wins.length/p.all.length)*100),
       minMoves:p.wins.length?Math.min(...p.wins.map(g=>g.moves)):null,
       fastestWin:p.wins.length?Math.min(...p.wins.map(g=>g.duration_seconds)):null
@@ -88,8 +79,7 @@
       </tr>`).join('');
 
     const top3=rows.slice(0,3);
-    const medals=['🥇','🥈','🥉'];
-    const order=top3.length>=3?[1,0,2]:top3.map((_,i)=>i);
+    const medals=['🥇','🥈','🥉'],order=top3.length>=3?[1,0,2]:top3.map((_,i)=>i);
     document.getElementById('podium').innerHTML=order.map(i=>!top3[i]?'':
       `<div class="podium-card rank-${i+1}">
         <div class="podium-medal">${medals[i]}</div>
@@ -112,9 +102,9 @@
   async function loadProfile(name){
     const{data:player}=await db.from('players').select('id,name,created_at').eq('name',name).maybeSingle();
     const prof=document.getElementById('player-profile');
-    if(!player){prof.innerHTML=`<p class="loading-msg">Игрок "${name}" не найден</p>`;prof.classList.remove('hidden');return;}
+    if(!player){prof.innerHTML='<p class="loading-msg">Игрок "'+name+'" не найден</p>';prof.classList.remove('hidden');return;}
     const{data:games}=await db.from('games').select('*').eq('player_id',player.id).order('created_at',{ascending:false});
-    if(!games||!games.length){prof.innerHTML=`<p class="loading-msg">${name} ещё не сыграл ни одной партии</p>`;prof.classList.remove('hidden');return;}
+    if(!games||!games.length){prof.innerHTML='<p class="loading-msg">'+name+' ещё не сыграл ни одной партии</p>';prof.classList.remove('hidden');return;}
     const wins=games.filter(g=>g.completed);
     const best=Math.max(...games.map(g=>g.score));
     const avg=Math.round(games.reduce((s,g)=>s+g.score,0)/games.length);
@@ -134,13 +124,13 @@
         <div class="profile-stat"><span>Средний счёт</span><strong>${avg}</strong></div>
         <div class="profile-stat"><span>Быстрая победа</span><strong>${fast!==null?fmt(fast):'—'}</strong></div>
         <div class="profile-stat"><span>Мин. ходов</span><strong>${minM??'—'}</strong></div>
-        <div class="profile-stat"><span>Текущая серия</span><strong>${cur} 🔥</strong></div>
+        <div class="profile-stat"><span>Тек. серия</span><strong>${cur} 🔥</strong></div>
         <div class="profile-stat"><span>Макс. серия</span><strong>${max}</strong></div>
       </div>
       <h4 style="margin:16px 0 10px">Последние 10 партий</h4>
       <div class="table-wrap"><table class="stats-table">
         <thead><tr><th>Итог</th><th>Счёт</th><th>Время</th><th>Ходы</th><th>Дата</th></tr></thead>
-        <tbody>${games.slice(0,10).map(g=>`<tr><td>${g.completed?'✅':'❌'}</td><td>${g.score}</td><td>${fmt(g.duration_seconds)}</td><td>${g.moves}</td><td>${new Date(g.created_at).toLocaleDateString('ru-RU')}</td></tr>`).join('')}</tbody>
+        <tbody>${games.slice(0,10).map(g=>'<tr><td>'+(g.completed?'✅':'❌')+'</td><td>'+g.score+'</td><td>'+fmt(g.duration_seconds)+'</td><td>'+g.moves+'</td><td>'+new Date(g.created_at).toLocaleDateString('ru-RU')+'</td></tr>').join('')}</tbody>
       </table></div>`;
     prof.classList.remove('hidden');
   }
