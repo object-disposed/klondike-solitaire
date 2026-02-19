@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Klondike Solitaire</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Экран ввода имени -->
+  <div id="name-screen" class="name-screen">
+    <div class="name-card">
+      <h1>🃏 Klondike Solitaire</h1>
+      <p>Введите ваше имя чтобы начать</p>
+      <input type="text" id="player-name-input" placeholder="Ваше имя" maxlength="30" />
+      <button id="start-btn" class="btn-primary">Играть</button>
+      <a href="stats.html" class="stats-link">📊 Таблица рекордов</a>
+    </div>
+  </div>
+
+  <!-- Экран игры -->
+  <div id="game-screen" class="game-screen hidden">
+    <header class="game-header">
+      <div class="header-stat">
+        <span class="stat-label">Score</span>
+        <span class="stat-value" id="score-display">0</span>
+      </div>
+      <div class="header-stat center">
+        <span class="stat-value" id="timer-display">00:00</span>
+      </div>
+      <div class="header-stat right">
+        <span class="stat-label">Moves</span>
+        <span class="stat-value" id="moves-display">0</span>
+      </div>
+    </header>
+
+    <main class="game-area">
+      <div class="top-row">
+        <div class="foundations-row">
+          <div class="foundation" id="foundation-0" data-suit="♠"></div>
+          <div class="foundation" id="foundation-1" data-suit="♥"></div>
+          <div class="foundation" id="foundation-2" data-suit="♦"></div>
+          <div class="foundation" id="foundation-3" data-suit="♣"></div>
+        </div>
+        <div class="stock-area">
+          <div class="stock-pile" id="stock"></div>
+          <div class="waste-pile" id="waste"></div>
+        </div>
+      </div>
+      <div class="tableau-row" id="tableau"></div>
+    </main>
+
+    <footer class="game-footer">
+      <button class="footer-btn" id="undo-btn">
+        <span class="btn-icon">↩</span>
+        <span>Undo</span>
+      </button>
+      <button class="footer-btn primary" id="new-game-btn">
+        <span class="btn-icon">🃏</span>
+        <span>New Game</span>
+      </button>
+      <button class="footer-btn" id="hint-btn">
+        <span class="btn-icon">💡</span>
+        <span>Hint</span>
+      </button>
+    </footer>
+  </div>
+
+  <!-- Модалка победы -->
+  <div id="win-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="win-emoji">🎉</div>
+      <h2>Победа!</h2>
+      <div class="win-stats">
+        <div class="win-stat"><span>Очки</span><strong id="win-score"></strong></div>
+        <div class="win-stat"><span>Время</span><strong id="win-time"></strong></div>
+        <div class="win-stat"><span>Ходы</span><strong id="win-moves"></strong></div>
+      </div>
+      <button class="btn-primary" id="win-new-game">Новая игра</button>
+      <a href="stats.html" class="stats-link">📊 Посмотреть статистику</a>
+    </div>
+  </div>
+
+  <!-- Модалка подсказки -->
+  <div id="hint-modal" class="modal hidden">
+    <div class="modal-content small">
+      <p id="hint-text"></p>
+      <div class="modal-buttons">
+        <button class="btn-secondary" id="hint-close">Понятно</button>
+        <button class="btn-primary hidden" id="hint-new-game">Новая игра</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+  // =============================================
+  //  КОНФИГУРАЦИЯ SUPABASE
+  //  ▼▼▼ ЗАМЕНИТЕ ЭТИ ЗНАЧЕНИЯ НА СВОИ ▼▼▼
+  // =============================================
+  const SUPABASE_URL = 'https://ncdajiaffqbmqamrpsfz.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_YxIguOiNADys-g1G6teUwA_qtKYEV6e';
+  // =============================================
+
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const SUITS = ['♠','♥','♦','♣'];
+  const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+  const RED_SUITS = ['♥','♦'];
+
+  const SCORE_WASTE_TO_TABLEAU  = 5;
+  const SCORE_WASTE_TO_FOUND    = 10;
+  const SCORE_TABLEAU_TO_FOUND  = 10;
+  const SCORE_TURN_STOCK        = -2;
+  const SCORE_FOUND_TO_TABLEAU  = -15;
+
+  let playerName = '';
+  let playerId   = null;
+  let stock      = [];
+  let waste      = [];
+  let foundations= [[],[],[],[]];
+  let tableau    = [[],[],[],[],[],[],[]];
+  let score      = 0;
+  let moves      = 0;
+  let seconds    = 0;
+  let timerInterval = null;
+  let history    = [];
+  let selectedCard = null;
+  let hintHighlight = [];
+
+  function isRed(suit) { return RED_SUITS.includes(suit); }
+  function rankIndex(r) { return RANKS.indexOf(r); }
+
+  function buildDeck() {
+    const deck = [];
+    for (const suit of SUITS)
+      for (const rank of RANKS)
+        deck.push({ suit, rank, faceUp: false });
+    return deck;
+  }
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+  function saveHistory() {
+    history.push({
+      stock: deepClone(stock), waste: deepClone(waste),
+      foundations: deepClone(foundations), tableau: deepClone(tableau),
+      score, moves
+    });
+    if (history.length > 100) history.shift();
+  }
+
+  function dealGame() {
+    clearInterval(timerInterval);
+    const deck = shuffle(buildDeck());
+    tableau    = [[],[],[],[],[],[],[]];
+    foundations= [[],[],[],[],[]];
+    waste      = []; stock = [];
+    score = 0; moves = 0; seconds = 0; history = [];
+    selectedCard = null;
+
+    let idx = 0;
+    for (let col = 0; col < 7; col++)
+      for (let row = 0; row <= col; row++) {
+        const card = deck[idx++];
+        card.faceUp = (row === col);
+        tableau[col].push(card);
+      }
+    while (idx < deck.length) stock.push(deck[idx++]);
+
+    updateDisplay();
+    updateTimer();
+    timerInterval = setInterval(() => { seconds++; updateTimerDisplay(); }, 1000);
+  }
+
+  function updateDisplay() {
+    renderStock(); renderWaste(); renderFoundations(); renderTableau(); updateScoreDisplay();
+  }
+
+  function createCardEl(card, extra = '') {
+    const el = document.createElement('div');
+    el.className = 'card' + (isRed(card.suit) ? ' red' : ' black') + extra;
+    el.dataset.rank = card.rank; el.dataset.suit = card.suit;
+    el.innerHTML = `
+      <span class="card-corner top">${card.rank}<br>${card.suit}</span>
+      <span class="card-center">${card.suit}</span>
+      <span class="card-corner bottom">${card.rank}<br>${card.suit}</span>`;
+    return el;
+  }
+
+  function createCardBackEl() {
+    const el = document.createElement('div');
+    el.className = 'card back';
+    return el;
+  }
+
+  function renderStock() {
+    const el = document.getElementById('stock');
+    el.innerHTML = '';
+    if (stock.length > 0) {
+      el.appendChild(createCardBackEl());
+      el.classList.remove('empty');
+    } else {
+      el.innerHTML = '<span class="pile-empty-icon">↺</span>';
+      el.classList.add('empty');
+    }
+  }
+
+  function renderWaste() {
+    const el = document.getElementById('waste');
+    el.innerHTML = '';
+    if (waste.length > 0) {
+      const card = waste[waste.length - 1];
+      const cardEl = createCardEl(card);
+      cardEl.addEventListener('click', () => onWasteClick(cardEl, card));
+      el.appendChild(cardEl);
+    }
+  }
+
+  function renderFoundations() {
+    for (let i = 0; i < 4; i++) {
+      const el = document.getElementById(`foundation-${i}`);
+      el.innerHTML = '';
+      if (foundations[i].length > 0) {
+        el.appendChild(createCardEl(foundations[i][foundations[i].length - 1]));
+      } else {
+        el.innerHTML = `<span class="pile-suit">${['♠','♥','♦','♣'][i]}</span>`;
+      }
+    }
+  }
+
+  function renderTableau() {
+    const container = document.getElementById('tableau');
+    container.innerHTML = '';
+    for (let col = 0; col < 7; col++) {
+      const colEl = document.createElement('div');
+      colEl.className = 'tableau-col';
+      colEl.dataset.col = col;
+
+      if (tableau[col].length === 0) {
+        colEl.classList.add('empty');
+        colEl.innerHTML = '<span class="pile-empty-icon">K</span>';
+        colEl.addEventListener('click', () => onTableauColClick(col, null, -1));
+      }
+
+      tableau[col].forEach((card, rowIdx) => {
+        let cardEl;
+        if (!card.faceUp) { cardEl = createCardBackEl(); }
+        else {
+          cardEl = createCardEl(card);
+          cardEl.addEventListener('click', () => onTableauColClick(col, card, rowIdx));
+        }
+        cardEl.style.top = `${rowIdx * 28}px`;
+        cardEl.classList.add('tableau-card');
+        colEl.appendChild(cardEl);
+      });
+
+      colEl.style.height = tableau[col].length > 0
+        ? `${(tableau[col].length - 1) * 28 + 120}px` : '120px';
+      container.appendChild(colEl);
+    }
+  }
+
+  function updateScoreDisplay() {
+    document.getElementById('score-display').textContent = Math.max(0, score);
+    document.getElementById('moves-display').textContent = moves;
+  }
+
+  function updateTimerDisplay() {
+    const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+    const s = String(seconds % 60).padStart(2, '0');
+    document.getElementById('timer-display').textContent = `${m}:${s}`;
+  }
+
+  function updateTimer() { updateTimerDisplay(); }
+
+  function clearSelection() {
+    selectedCard = null;
+    document.querySelectorAll('.card.selected').forEach(el => el.classList.remove('selected'));
+  }
+
+  function clearHints() {
+    hintHighlight.forEach(el => el && el.classList.remove('hint'));
+    hintHighlight = [];
+  }
+
+  document.getElementById('stock').addEventListener('click', () => {
+    clearHints(); clearSelection();
+    if (stock.length === 0) {
+      saveHistory();
+      stock = waste.slice().reverse().map(c => ({ ...c, faceUp: false }));
+      waste = []; moves++; updateDisplay(); return;
+    }
+    saveHistory();
+    const card = stock.pop();
+    card.faceUp = true;
+    waste.push(card);
+    score = Math.max(0, score + SCORE_TURN_STOCK);
+    moves++; updateDisplay();
+  });
+
+  function onWasteClick(el, card) {
+    clearHints();
+    if (selectedCard) { clearSelection(); return; }
+    el.classList.add('selected');
+    selectedCard = { cards: [card], fromPile: 'waste', fromIndex: -1, element: el };
+  }
+
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`foundation-${i}`).addEventListener('click', () => {
+      clearHints();
+      if (!selectedCard) return;
+      if (selectedCard.cards.length !== 1) { clearSelection(); return; }
+      const card = selectedCard.cards[0];
+      if (canPlaceOnFoundation(card, i)) {
+        saveHistory();
+        removeSelectedFromSource();
+        foundations[i].push(card);
+        score += selectedCard.fromPile === 'waste' ? SCORE_WASTE_TO_FOUND : SCORE_TABLEAU_TO_FOUND;
+        moves++; clearSelection(); updateDisplay(); checkWin();
+      } else { clearSelection(); }
+    });
+  }
+
+  function onTableauColClick(col, card, rowIdx) {
+    clearHints();
+    if (selectedCard) {
+      if (canPlaceOnTableau(selectedCard.cards[0], col)) {
+        saveHistory();
+        const cards = selectedCard.cards;
+        removeSelectedFromSource();
+        tableau[col].push(...cards);
+        if (selectedCard.fromPile === 'waste') score += SCORE_WASTE_TO_TABLEAU;
+        else if (selectedCard.fromPile === 'foundation') score = Math.max(0, score + SCORE_FOUND_TO_TABLEAU);
+        moves++; clearSelection(); updateDisplay();
+      } else {
+        clearSelection();
+        if (card && card.faceUp) selectTableauCard(col, card, rowIdx);
+      }
+      return;
+    }
+    if (!card || !card.faceUp) return;
+    selectTableauCard(col, card, rowIdx);
+  }
+
+  function selectTableauCard(col, card, rowIdx) {
+    const cards = tableau[col].slice(rowIdx);
+    const colEl = document.querySelectorAll('.tableau-col')[col];
+    const cardEls = colEl.querySelectorAll('.card:not(.back)');
+    const offset = tableau[col].filter(c => !c.faceUp).length;
+    const relIdx = rowIdx - offset;
+    Array.from(cardEls).slice(relIdx).forEach(el => el.classList.add('selected'));
+    selectedCard = { cards, fromPile: 'tableau', fromIndex: col };
+  }
+
+  function canPlaceOnFoundation(card, fIdx) {
+    const pile = foundations[fIdx];
+    if (pile.length === 0) return card.rank === 'A';
+    const top = pile[pile.length - 1];
+    return top.suit === card.suit && rankIndex(card.rank) === rankIndex(top.rank) + 1;
+  }
+
+  function canPlaceOnTableau(card, col) {
+    const pile = tableau[col];
+    if (pile.length === 0) return card.rank === 'K';
+    const top = pile[pile.length - 1];
+    if (!top.faceUp) return false;
+    return isRed(card.suit) !== isRed(top.suit) && rankIndex(card.rank) === rankIndex(top.rank) - 1;
+  }
+
+  function removeSelectedFromSource() {
+    if (selectedCard.fromPile === 'waste') {
+      waste.pop();
+    } else if (selectedCard.fromPile === 'tableau') {
+      const col = selectedCard.fromIndex;
+      tableau[col] = tableau[col].slice(0, tableau[col].length - selectedCard.cards.length);
+      if (tableau[col].length > 0 && !tableau[col][tableau[col].length - 1].faceUp) {
+        tableau[col][tableau[col].length - 1].faceUp = true;
+        score += 5;
+      }
+    } else if (selectedCard.fromPile === 'foundation') {
+      foundations[selectedCard.fromIndex].pop();
+    }
+  }
+
+  document.getElementById('undo-btn').addEventListener('click', () => {
+    clearHints(); clearSelection();
+    if (history.length === 0) return;
+    const prev = history.pop();
+    stock = prev.stock; waste = prev.waste;
+    foundations = prev.foundations; tableau = prev.tableau;
+    score = prev.score; moves = prev.moves;
+    updateDisplay();
+  });
+
+  document.getElementById('new-game-btn').addEventListener('click', () => {
+    clearInterval(timerInterval); dealGame();
+  });
+  document.getElementById('win-new-game').addEventListener('click', () => {
+    document.getElementById('win-modal').classList.add('hidden'); dealGame();
+  });
+  document.getElementById('hint-new-game').addEventListener('click', () => {
+    document.getElementById('hint-modal').classList.add('hidden'); dealGame();
+  });
+  document.getElementById('hint-close').addEventListener('click', () => {
+    document.getElementById('hint-modal').classList.add('hidden');
+  });
+
+  document.getElementById('hint-btn').addEventListener('click', () => {
+    clearSelection(); clearHints();
+    const hint = findHint();
+    const modal = document.getElementById('hint-modal');
+    const newGameBtn = document.getElementById('hint-new-game');
+    const closeBtn   = document.getElementById('hint-close');
+    if (!hint) {
+      document.getElementById('hint-text').textContent = '😔 Нет доступных ходов. Начать новую игру?';
+      newGameBtn.classList.remove('hidden');
+      closeBtn.textContent = 'Отмена';
+    } else {
+      document.getElementById('hint-text').textContent = `💡 ${hint.description}`;
+      newGameBtn.classList.add('hidden');
+      closeBtn.textContent = 'Понятно';
+      if (hint.sourceEl) { hint.sourceEl.classList.add('hint'); hintHighlight.push(hint.sourceEl); }
+      if (hint.targetEl) { hint.targetEl.classList.add('hint'); hintHighlight.push(hint.targetEl); }
+    }
+    modal.classList.remove('hidden');
+  });
+
+  function findHint() {
+    if (waste.length > 0) {
+      const card = waste[waste.length - 1];
+      for (let i = 0; i < 4; i++)
+        if (canPlaceOnFoundation(card, i))
+          return { description: `${card.rank}${card.suit} → фундамент`, sourceEl: getWasteEl(), targetEl: getFoundationEl(i) };
+    }
+    for (let col = 0; col < 7; col++) {
+      if (!tableau[col].length) continue;
+      const card = tableau[col][tableau[col].length - 1];
+      if (!card.faceUp) continue;
+      for (let i = 0; i < 4; i++)
+        if (canPlaceOnFoundation(card, i))
+          return { description: `${card.rank}${card.suit} → фундамент`, sourceEl: getTableauTopEl(col), targetEl: getFoundationEl(i) };
+    }
+    if (waste.length > 0) {
+      const card = waste[waste.length - 1];
+      for (let col = 0; col < 7; col++)
+        if (canPlaceOnTableau(card, col))
+          return { description: `${card.rank}${card.suit} из отбоя → колонка ${col + 1}`, sourceEl: getWasteEl(), targetEl: getTableauColEl(col) };
+    }
+    for (let fromCol = 0; fromCol < 7; fromCol++) {
+      const col = tableau[fromCol];
+      for (let rowIdx = 0; rowIdx < col.length; rowIdx++) {
+        const card = col[rowIdx];
+        if (!card.faceUp) continue;
+        for (let toCol = 0; toCol < 7; toCol++) {
+          if (toCol === fromCol) continue;
+          if (canPlaceOnTableau(card, toCol)) {
+            const revealsCard = rowIdx > 0 && !col[rowIdx - 1].faceUp;
+            const isKingToEmpty = card.rank === 'K' && tableau[toCol].length === 0;
+            if (revealsCard || isKingToEmpty || rowIdx === col.length - 1)
+              return { description: `${card.rank}${card.suit} → колонка ${toCol + 1}`, sourceEl: getTableauTopEl(fromCol), targetEl: getTableauColEl(toCol) };
+          }
+        }
+      }
+    }
+    for (let fi = 0; fi < 4; fi++) {
+      if (!foundations[fi].length) continue;
+      const card = foundations[fi][foundations[fi].length - 1];
+      for (let col = 0; col < 7; col++)
+        if (canPlaceOnTableau(card, col))
+          return { description: `${card.rank}${card.suit} с фундамента → колонка ${col + 1}`, sourceEl: getFoundationEl(fi), targetEl: getTableauColEl(col) };
+    }
+    if (stock.length > 0)
+      return { description: '↺ Откройте следующую карту из колоды', sourceEl: document.getElementById('stock'), targetEl: null };
+    return null;
+  }
+
+  function getWasteEl()        { return document.getElementById('waste').querySelector('.card'); }
+  function getFoundationEl(i)  { return document.getElementById(`foundation-${i}`); }
+  function getTableauTopEl(col) {
+    const colEl = document.querySelectorAll('.tableau-col')[col];
+    const cards = colEl.querySelectorAll('.card:not(.back)');
+    return cards.length ? cards[cards.length - 1] : colEl;
+  }
+  function getTableauColEl(col) { return document.querySelectorAll('.tableau-col')[col]; }
+
+  function checkWin() {
+    if (foundations.reduce((s, f) => s + f.length, 0) === 52) {
+      clearInterval(timerInterval);
+      const timeBonus = Math.max(0, 700000 / Math.max(seconds, 1));
+      const finalScore = Math.round(Math.max(0, score) + timeBonus);
+      document.getElementById('win-score').textContent = finalScore;
+      document.getElementById('win-time').textContent = document.getElementById('timer-display').textContent;
+      document.getElementById('win-moves').textContent = moves;
+      document.getElementById('win-modal').classList.remove('hidden');
+      saveGameResult(finalScore, true);
+    }
+  }
+
+  async function getOrCreatePlayer(name) {
+    const { data: existing } = await db.from('players').select('id').eq('name', name).maybeSingle();
+    if (existing) return existing.id;
+    const { data: created } = await db.from('players').insert({ name }).select('id').single();
+    return created?.id || null;
+  }
+
+  async function saveGameResult(finalScore, completed) {
+    if (!playerId) return;
+    await db.from('games').insert({
+      player_id: playerId, score: Math.max(0, finalScore),
+      duration_seconds: seconds, moves, completed
+    });
+  }
+
+  document.getElementById('start-btn').addEventListener('click', async () => {
+    const name = document.getElementById('player-name-input').value.trim();
+    if (!name) { document.getElementById('player-name-input').focus(); return; }
+    playerName = name;
+    playerId   = await getOrCreatePlayer(name);
+    document.getElementById('name-screen').classList.add('hidden');
+    document.getElementById('game-screen').classList.remove('hidden');
+    dealGame();
+  });
+
+  document.getElementById('player-name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('start-btn').click();
+  });
+
+  window.addEventListener('beforeunload', () => {
+    if (playerId && moves > 0) saveGameResult(Math.max(0, score), false);
+  });
+  </script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Статистика — Klondike Solitaire</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="stats-page">
+    <header class="stats-header">
+      <a href="index.html" class="back-link">← Играть</a>
+      <h1>📊 Статистика</h1>
+    </header>
+
+    <section class="podium-section">
+      <div class="podium" id="podium"><div class="loading-msg">Загрузка...</div></div>
+    </section>
+
+    <section class="stats-section">
+      <h2>🏆 Таблица лидеров</h2>
+      <div class="table-wrap">
+        <table class="stats-table" id="leaderboard-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Игрок</th><th>Лучший счёт</th>
+              <th>Победы</th><th>% побед</th><th>Мин. ходов</th><th>Быстрая победа</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-body">
+            <tr><td colspan="7" class="loading-msg">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="stats-section records-grid">
+      <h2>🎯 Рекорды</h2>
+      <div class="records-cards" id="records-cards">
+        <div class="loading-msg">Загрузка...</div>
+      </div>
+    </section>
+
+    <section class="stats-section">
+      <h2>🔍 Профиль игрока</h2>
+      <div class="player-search">
+        <input type="text" id="search-input" placeholder="Введите имя игрока" />
+        <button class="btn-primary" id="search-btn">Найти</button>
+      </div>
+      <div id="player-profile" class="player-profile hidden"></div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+  // =============================================
+  //  КОНФИГУРАЦИЯ SUPABASE
+  //  ▼▼▼ ЗАМЕНИТЕ ЭТИ ЗНАЧЕНИЯ НА СВОИ ▼▼▼
+  // =============================================
+  const SUPABASE_URL = 'https://ncdajiaffqbmqamrpsfz.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_YxIguOiNADys-g1G6teUwA_qtKYEV6e';
+  // =============================================
+
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  function fmtTime(sec) {
+    if (!sec && sec !== 0) return '—';
+    return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
+  }
+
+  async function loadLeaderboard() {
+    const { data: games } = await db
+      .from('games')
+      .select('player_id, score, duration_seconds, moves, completed, players(name)');
+
+    if (!games || games.length === 0) {
+      document.getElementById('leaderboard-body').innerHTML =
+        '<tr><td colspan="7" class="loading-msg">Нет данных. Сыграйте первую партию!</td></tr>';
+      document.getElementById('podium').innerHTML = '<div class="loading-msg">Нет данных</div>';
+      document.getElementById('records-cards').innerHTML = '<div class="loading-msg">Нет данных</div>';
+      return;
+    }
+
+    const players = {};
+    for (const g of games) {
+      const name = g.players?.name || 'Unknown';
+      if (!players[name]) players[name] = { name, scores: [], wins: [], all: [] };
+      players[name].all.push(g);
+      if (g.completed) players[name].wins.push(g);
+      players[name].scores.push(g.score);
+    }
+
+    const rows = Object.values(players).map(p => ({
+      name: p.name,
+      bestScore: Math.max(...p.scores),
+      wins: p.wins.length, total: p.all.length,
+      winPct: Math.round((p.wins.length / p.all.length) * 100),
+      minMoves: p.wins.length ? Math.min(...p.wins.map(g => g.moves)) : null,
+      fastestWin: p.wins.length ? Math.min(...p.wins.map(g => g.duration_seconds)) : null,
+    })).sort((a, b) => b.bestScore - a.bestScore);
+
+    document.getElementById('leaderboard-body').innerHTML = rows.map((r, i) => `
+      <tr class="${i < 3 ? 'top-' + (i+1) : ''}">
+        <td>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
+        <td class="player-name">${r.name}</td>
+        <td><strong>${r.bestScore}</strong></td>
+        <td>${r.wins} / ${r.total}</td>
+        <td>${r.winPct}%</td>
+        <td>${r.minMoves ?? '—'}</td>
+        <td>${r.fastestWin !== null ? fmtTime(r.fastestWin) : '—'}</td>
+      </tr>`).join('');
+
+    const top3 = rows.slice(0, 3);
+    const medals = ['🥇','🥈','🥉'];
+    const podiumOrder = top3.length >= 3 ? [1,0,2] : top3.map((_,i) => i);
+    document.getElementById('podium').innerHTML = podiumOrder.map(i => !top3[i] ? '' : `
+      <div class="podium-card rank-${i+1}">
+        <div class="podium-medal">${medals[i]}</div>
+        <div class="podium-name">${top3[i].name}</div>
+        <div class="podium-score">${top3[i].bestScore} pts</div>
+        <div class="podium-detail">${top3[i].wins} побед</div>
+      </div>`).join('');
+
+    const allWins = games.filter(g => g.completed);
+    const bestScore = games.reduce((m,g) => g.score > m.score ? g : m, games[0]);
+    const fastestWin = allWins.length ? allWins.reduce((m,g) => g.duration_seconds < m.duration_seconds ? g : m, allWins[0]) : null;
+    const minMovesWin = allWins.length ? allWins.reduce((m,g) => g.moves < m.moves ? g : m, allWins[0]) : null;
+
+    document.getElementById('records-cards').innerHTML = `
+      <div class="record-card"><div class="rec-icon">🏆</div><div class="rec-label">Лучший счёт</div><div class="rec-value">${bestScore.score}</div><div class="rec-who">${bestScore.players?.name||'—'}</div></div>
+      <div class="record-card"><div class="rec-icon">⚡</div><div class="rec-label">Самая быстрая победа</div><div class="rec-value">${fastestWin ? fmtTime(fastestWin.duration_seconds) : '—'}</div><div class="rec-who">${fastestWin?.players?.name||'—'}</div></div>
+      <div class="record-card"><div class="rec-icon">🎯</div><div class="rec-label">Минимум ходов</div><div class="rec-value">${minMovesWin?.moves||'—'}</div><div class="rec-who">${minMovesWin?.players?.name||'—'}</div></div>
+      <div class="record-card"><div class="rec-icon">🎮</div><div class="rec-label">Всего партий</div><div class="rec-value">${games.length}</div><div class="rec-who">${games.filter(g=>g.completed).length} завершено</div></div>`;
+  }
+
+  async function loadPlayerProfile(name) {
+    const { data: player } = await db.from('players').select('id,name,created_at').eq('name',name).maybeSingle();
+    if (!player) {
+      document.getElementById('player-profile').innerHTML = `<p class="loading-msg">Игрок "${name}" не найден</p>`;
+      document.getElementById('player-profile').classList.remove('hidden'); return;
+    }
+    const { data: games } = await db.from('games').select('*').eq('player_id',player.id).order('created_at',{ascending:false});
+    if (!games || !games.length) {
+      document.getElementById('player-profile').innerHTML = `<p class="loading-msg">${name} ещё не сыграл ни одной партии</p>`;
+      document.getElementById('player-profile').classList.remove('hidden'); return;
+    }
+    const wins = games.filter(g => g.completed);
+    const bestScore = Math.max(...games.map(g=>g.score));
+    const avgScore  = Math.round(games.reduce((s,g)=>s+g.score,0)/games.length);
+    const winPct    = Math.round((wins.length/games.length)*100);
+    const fastestWin = wins.length ? Math.min(...wins.map(g=>g.duration_seconds)) : null;
+    const minMoves   = wins.length ? Math.min(...wins.map(g=>g.moves)) : null;
+
+    let curStreak = 0, maxStreak = 0, streak = 0;
+    for (const g of [...games].reverse()) { if(g.completed){streak++;maxStreak=Math.max(maxStreak,streak);}else streak=0; }
+    for (const g of games) { if(g.completed)curStreak++;else break; }
+
+    document.getElementById('player-profile').innerHTML = `
+      <div class="profile-header">
+        <h3>${player.name}</h3>
+        <span class="profile-since">Играет с ${new Date(player.created_at).toLocaleDateString('ru-RU')}</span>
+      </div>
+      <div class="profile-grid">
+        <div class="profile-stat"><span>Партий сыграно</span><strong>${games.length}</strong></div>
+        <div class="profile-stat"><span>Побед</span><strong>${wins.length}</strong></div>
+        <div class="profile-stat"><span>% побед</span><strong>${winPct}%</strong></div>
+        <div class="profile-stat"><span>Лучший счёт</span><strong>${bestScore}</strong></div>
+        <div class="profile-stat"><span>Средний счёт</span><strong>${avgScore}</strong></div>
+        <div class="profile-stat"><span>Быстрая победа</span><strong>${fastestWin!==null?fmtTime(fastestWin):'—'}</strong></div>
+        <div class="profile-stat"><span>Мин. ходов</span><strong>${minMoves??'—'}</strong></div>
+        <div class="profile-stat"><span>Текущая серия</span><strong>${curStreak} 🔥</strong></div>
+        <div class="profile-stat"><span>Макс. серия</span><strong>${maxStreak}</strong></div>
+      </div>
+      <h4 style="margin:16px 0 10px">Последние 10 партий</h4>
+      <div class="table-wrap">
+        <table class="stats-table">
+          <thead><tr><th>Итог</th><th>Счёт</th><th>Время</th><th>Ходы</th><th>Дата</th></tr></thead>
+          <tbody>${games.slice(0,10).map(g=>`
+            <tr>
+              <td>${g.completed?'✅':'❌'}</td>
+              <td>${g.score}</td>
+              <td>${fmtTime(g.duration_seconds)}</td>
+              <td>${g.moves}</td>
+              <td>${new Date(g.created_at).toLocaleDateString('ru-RU')}</td>
+            </tr>`).join('')}</tbody>
+        </table>
+      </div>`;
+    document.getElementById('player-profile').classList.remove('hidden');
+  }
+
+  document.getElementById('search-btn').addEventListener('click', () => {
+    const name = document.getElementById('search-input').value.trim();
+    if (name) loadPlayerProfile(name);
+  });
+  document.getElementById('search-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('search-btn').click();
+  });
+
+  loadLeaderboard();
+  </script>
+</body>
+</html>
