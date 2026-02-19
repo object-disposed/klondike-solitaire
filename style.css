@@ -1,8 +1,6 @@
 *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
 body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#1a5c38; color:#fff; min-height:100vh; user-select:none; }
 .hidden { display:none !important; }
-
-/* STATS PAGE */
 .stats-page { max-width:900px; margin:0 auto; padding:16px; }
 .stats-header { display:flex; align-items:center; gap:20px; padding:16px 0 24px; border-bottom:1px solid rgba(255,255,255,.15); margin-bottom:32px; }
 .back-link { color:rgba(255,255,255,.7); text-decoration:none; font-size:.95rem; transition:color .2s; }
@@ -49,8 +47,6 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
 .profile-stat span { font-size:.78rem; color:rgba(255,255,255,.6); }
 .profile-stat strong { font-size:1.25rem; }
 .loading-msg { color:rgba(255,255,255,.5); padding:24px; text-align:center; }
-
-/* SHARED BUTTONS */
 .btn-primary { display:block; width:100%; padding:14px; font-size:1.1rem; font-weight:600; background:linear-gradient(135deg,#f5a623,#e8891a); color:#fff; border:none; border-radius:12px; cursor:pointer; transition:opacity .2s,transform .1s; }
 .btn-primary:hover { opacity:.92; }
 .btn-primary:active { transform:scale(.98); }
