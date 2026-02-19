@@ -1,543 +1,540 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Klondike Solitaire</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+  .card{position:relative;cursor:pointer;flex-shrink:0}
+  .card-face{position:absolute;inset:0;border-radius:9px;background:#fff;border:1px solid rgba(0,0,0,.13);box-shadow:0 2px 7px rgba(0,0,0,.32);overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:4px}
+  .card.red .card-face{color:#d62828}
+  .card.black .card-face{color:#111}
+  .card-corner{display:flex;flex-direction:column;align-items:center;line-height:1}
+  .card-corner .rank{font-size:.85rem;font-weight:900;letter-spacing:-.03em}
+  .card-corner .suit{font-size:.7rem;margin-top:-1px}
+  .card-corner.bot{transform:rotate(180deg);align-self:flex-end}
+  .card-art{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:2.2rem;line-height:1;pointer-events:none}
+  .card-art.pip{font-size:1.8rem}
+  .card-royal{position:absolute;inset:18px 4px 18px 4px;display:flex;align-items:center;justify-content:center;font-size:2.8rem;pointer-events:none}
+  .card-back-face{position:absolute;inset:0;border-radius:9px;background:repeating-linear-gradient(45deg,#b91c1c,#b91c1c 5px,#991818 5px,#991818 10px);border:3px solid #7f1d1d;box-shadow:0 2px 7px rgba(0,0,0,.32)}
+  .card-back-face::after{content:'';position:absolute;inset:5px;border-radius:5px;border:2px solid rgba(255,255,255,.25)}
+  .card.selected .card-face,.card.selected .card-back-face{box-shadow:0 0 0 3px #f5a623,0 8px 24px rgba(0,0,0,.5)!important;transform:translateY(-10px)}
+  .card.hint-glow .card-face{box-shadow:0 0 0 3px #22d3ee,0 6px 18px rgba(0,0,0,.4)!important;animation:hintPulse .75s ease-in-out infinite alternate}
+  @keyframes hintPulse{from{box-shadow:0 0 0 3px #22d3ee}to{box-shadow:0 0 0 5px #0ea5e9,0 0 20px rgba(14,165,233,.5)}}
+  .card-flying{position:fixed;z-index:999;pointer-events:none;transition:left .28s cubic-bezier(.4,0,.2,1),top .28s cubic-bezier(.4,0,.2,1)}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#1a6b3a;color:#fff;min-height:100vh;user-select:none}
+  .hidden{display:none!important}
+  .name-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at center,#236b45 0%,#0d3a20 100%)}
+  .name-card{background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:48px 40px;text-align:center;width:min(400px,90vw);backdrop-filter:blur(12px)}
+  .name-card h1{font-size:2rem;margin-bottom:10px}
+  .name-card p{color:rgba(255,255,255,.7);margin-bottom:28px}
+  .name-card input{width:100%;padding:14px 18px;font-size:1.1rem;border:2px solid rgba(255,255,255,.25);border-radius:12px;background:rgba(255,255,255,.1);color:#fff;outline:none;margin-bottom:16px;transition:border-color .2s}
+  .name-card input::placeholder{color:rgba(255,255,255,.4)}
+  .name-card input:focus{border-color:rgba(255,255,255,.6)}
+  .btn-primary{display:block;width:100%;padding:14px;font-size:1.1rem;font-weight:600;background:linear-gradient(135deg,#f5a623,#e8891a);color:#fff;border:none;border-radius:12px;cursor:pointer;transition:opacity .2s,transform .1s}
+  .btn-primary:hover{opacity:.92}
+  .btn-primary:active{transform:scale(.98)}
+  .btn-secondary{padding:10px 24px;font-size:1rem;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:10px;cursor:pointer;transition:background .2s}
+  .btn-secondary:hover{background:rgba(255,255,255,.25)}
+  .stats-link{display:inline-block;margin-top:16px;color:rgba(255,255,255,.6);text-decoration:none;font-size:.95rem;transition:color .2s}
+  .stats-link:hover{color:#fff}
+  .game-screen{display:flex;flex-direction:column;height:100vh;max-height:100vh;background:#1a6b3a}
+  .game-header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:rgba(0,0,0,.3);border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0}
+  .header-stat{display:flex;flex-direction:column;align-items:flex-start;min-width:90px}
+  .header-stat.center{align-items:center}
+  .header-stat.right{align-items:flex-end}
+  .stat-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.6)}
+  .stat-value{font-size:1.5rem;font-weight:700}
+  .game-area{flex:1;overflow-y:auto;padding:14px 10px 6px;display:flex;flex-direction:column;gap:14px}
+  .top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
+  .foundations-row{display:flex;gap:6px}
+  .stock-area{display:flex;gap:6px}
+  .pile-slot{width:72px;height:104px;border-radius:9px;border:2px dashed rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:border-color .2s;position:relative}
+  .pile-slot:hover{border-color:rgba(255,255,255,.55)}
+  .pile-suit{font-size:2.2rem;opacity:.3}
+  .pile-empty-icon{font-size:1.5rem;opacity:.35;font-weight:700}
+  .waste-pile{position:relative;width:calc(72px + 2*18px);height:104px;flex-shrink:0}
+  .waste-pile .card{position:absolute;top:0}
+  .tableau-row{display:flex;gap:6px;justify-content:center;padding-bottom:24px}
+  .tableau-col{position:relative;width:72px;min-height:104px;flex-shrink:0}
+  .tableau-col-empty{position:absolute;inset:0;border-radius:9px;border:2px dashed rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;pointer-events:none}
+  .pile-slot.drop-target,.tableau-col.drop-target{border-color:#22d3ee!important;border-style:solid!important}
+  .game-footer{display:flex;gap:8px;padding:10px 14px 14px;background:rgba(0,0,0,.3);border-top:1px solid rgba(255,255,255,.1);flex-shrink:0}
+  .footer-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:14px;color:#fff;font-size:.82rem;font-weight:600;cursor:pointer;transition:background .2s,transform .1s}
+  .footer-btn:hover{background:rgba(255,255,255,.2)}
+  .footer-btn:active{transform:scale(.96)}
+  .footer-btn.primary{background:rgba(245,166,35,.3);border-color:rgba(245,166,35,.5)}
+  .footer-btn.primary:hover{background:rgba(245,166,35,.45)}
+  .btn-icon{font-size:1.4rem}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
+  .modal-content{background:linear-gradient(145deg,#1e4d30,#153a23);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:36px 32px;text-align:center;width:min(380px,88vw);box-shadow:0 24px 60px rgba(0,0,0,.6)}
+  .modal-content.small{padding:28px 24px}
+  .win-emoji{font-size:3.5rem;margin-bottom:8px}
+  .modal-content h2{font-size:1.8rem;margin-bottom:20px}
+  .modal-content p{color:rgba(255,255,255,.75);margin-bottom:20px;line-height:1.5}
+  .win-stats{display:flex;gap:16px;justify-content:center;margin-bottom:28px}
+  .win-stat{display:flex;flex-direction:column;gap:4px}
+  .win-stat span{font-size:.75rem;color:rgba(255,255,255,.6);text-transform:uppercase}
+  .win-stat strong{font-size:1.4rem}
+  .modal-buttons{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .modal-buttons .btn-primary{width:auto;padding:10px 24px}
+  .modal-buttons .btn-secondary{padding:10px 24px}
+  .dragging{opacity:.35!important}
+  @media(max-width:500px){
+    .pile-slot,.tableau-col{width:46px}
+    .waste-pile{width:calc(46px + 2*14px)}
+    .pile-slot{height:67px}
+    .waste-pile{height:67px}
+    .card-corner .rank{font-size:.62rem}
+    .card-corner .suit{font-size:.55rem}
+    .card-art.pip{font-size:1.1rem}
+    .card-royal{font-size:1.8rem}
+    .tableau-row,.top-row,.foundations-row,.stock-area{gap:3px}
+  }
+  </style>
 </head>
 <body>
-  <!-- Экран ввода имени -->
-  <div id="name-screen" class="name-screen">
-    <div class="name-card">
-      <h1>🃏 Klondike Solitaire</h1>
-      <p>Введите ваше имя чтобы начать</p>
-      <input type="text" id="player-name-input" placeholder="Ваше имя" maxlength="30" />
-      <button id="start-btn" class="btn-primary">Играть</button>
-      <a href="stats.html" class="stats-link">📊 Таблица рекордов</a>
+
+<div id="name-screen" class="name-screen">
+  <div class="name-card">
+    <h1>🃏 Klondike Solitaire</h1>
+    <p>Введите ваше имя чтобы начать</p>
+    <input type="text" id="player-name-input" placeholder="Ваше имя" maxlength="30"/>
+    <button id="start-btn" class="btn-primary">Играть</button>
+    <a href="stats.html" class="stats-link">📊 Таблица рекордов</a>
+  </div>
+</div>
+
+<div id="game-screen" class="game-screen hidden">
+  <header class="game-header">
+    <div class="header-stat">
+      <span class="stat-label">Очки</span>
+      <span class="stat-value" id="score-display">0</span>
     </div>
-  </div>
+    <div class="header-stat center">
+      <span class="stat-value" id="timer-display">00:00</span>
+    </div>
+    <div class="header-stat right">
+      <span class="stat-label">Ходы</span>
+      <span class="stat-value" id="moves-display">0</span>
+    </div>
+  </header>
+  <main class="game-area">
+    <div class="top-row">
+      <div class="foundations-row">
+        <div class="pile-slot" id="foundation-0"><span class="pile-suit">♠</span></div>
+        <div class="pile-slot" id="foundation-1"><span class="pile-suit">♥</span></div>
+        <div class="pile-slot" id="foundation-2"><span class="pile-suit">♦</span></div>
+        <div class="pile-slot" id="foundation-3"><span class="pile-suit">♣</span></div>
+      </div>
+      <div class="stock-area">
+        <div class="pile-slot" id="stock"><span class="pile-empty-icon">↺</span></div>
+        <div class="waste-pile" id="waste"></div>
+      </div>
+    </div>
+    <div class="tableau-row" id="tableau"></div>
+  </main>
+  <footer class="game-footer">
+    <button class="footer-btn" id="undo-btn"><span class="btn-icon">↩</span><span>Отмена</span></button>
+    <button class="footer-btn primary" id="new-game-btn"><span class="btn-icon">🃏</span><span>Новая игра</span></button>
+    <button class="footer-btn" id="hint-btn"><span class="btn-icon">💡</span><span>Подсказка</span></button>
+  </footer>
+</div>
 
-  <!-- Экран игры -->
-  <div id="game-screen" class="game-screen hidden">
-    <header class="game-header">
-      <div class="header-stat">
-        <span class="stat-label">Score</span>
-        <span class="stat-value" id="score-display">0</span>
-      </div>
-      <div class="header-stat center">
-        <span class="stat-value" id="timer-display">00:00</span>
-      </div>
-      <div class="header-stat right">
-        <span class="stat-label">Moves</span>
-        <span class="stat-value" id="moves-display">0</span>
-      </div>
-    </header>
-
-    <main class="game-area">
-      <div class="top-row">
-        <div class="foundations-row">
-          <div class="foundation" id="foundation-0" data-suit="♠"></div>
-          <div class="foundation" id="foundation-1" data-suit="♥"></div>
-          <div class="foundation" id="foundation-2" data-suit="♦"></div>
-          <div class="foundation" id="foundation-3" data-suit="♣"></div>
-        </div>
-        <div class="stock-area">
-          <div class="stock-pile" id="stock"></div>
-          <div class="waste-pile" id="waste"></div>
-        </div>
-      </div>
-      <div class="tableau-row" id="tableau"></div>
-    </main>
-
-    <footer class="game-footer">
-      <button class="footer-btn" id="undo-btn">
-        <span class="btn-icon">↩</span>
-        <span>Undo</span>
-      </button>
-      <button class="footer-btn primary" id="new-game-btn">
-        <span class="btn-icon">🃏</span>
-        <span>New Game</span>
-      </button>
-      <button class="footer-btn" id="hint-btn">
-        <span class="btn-icon">💡</span>
-        <span>Hint</span>
-      </button>
-    </footer>
-  </div>
-
-  <!-- Модалка победы -->
-  <div id="win-modal" class="modal hidden">
-    <div class="modal-content">
-      <div class="win-emoji">🎉</div>
-      <h2>Победа!</h2>
-      <div class="win-stats">
-        <div class="win-stat"><span>Очки</span><strong id="win-score"></strong></div>
-        <div class="win-stat"><span>Время</span><strong id="win-time"></strong></div>
-        <div class="win-stat"><span>Ходы</span><strong id="win-moves"></strong></div>
-      </div>
+<div id="win-modal" class="modal hidden">
+  <div class="modal-content">
+    <div class="win-emoji">🎉</div>
+    <h2>Победа!</h2>
+    <div class="win-stats">
+      <div class="win-stat"><span>Очки</span><strong id="win-score"></strong></div>
+      <div class="win-stat"><span>Время</span><strong id="win-time"></strong></div>
+      <div class="win-stat"><span>Ходы</span><strong id="win-moves"></strong></div>
+    </div>
+    <div class="modal-buttons">
       <button class="btn-primary" id="win-new-game">Новая игра</button>
-      <a href="stats.html" class="stats-link">📊 Посмотреть статистику</a>
+      <a href="stats.html" class="btn-secondary" style="text-decoration:none;display:inline-flex;align-items:center">📊 Статистика</a>
     </div>
   </div>
+</div>
 
-  <!-- Модалка подсказки -->
-  <div id="hint-modal" class="modal hidden">
-    <div class="modal-content small">
-      <p id="hint-text"></p>
-      <div class="modal-buttons">
-        <button class="btn-secondary" id="hint-close">Понятно</button>
-        <button class="btn-primary hidden" id="hint-new-game">Новая игра</button>
-      </div>
+<div id="autocomplete-modal" class="modal hidden">
+  <div class="modal-content small">
+    <div style="font-size:2rem;margin-bottom:8px">🤖</div>
+    <h2>Партия выиграна!</h2>
+    <p>Все скрытые карты открыты — можно завершить автоматически.</p>
+    <div class="modal-buttons">
+      <button class="btn-primary" id="autocomplete-yes">Да, завершить</button>
+      <button class="btn-secondary" id="autocomplete-no">Нет, сам</button>
     </div>
   </div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-  // =============================================
-  //  КОНФИГУРАЦИЯ SUPABASE
-  //  ▼▼▼ ЗАМЕНИТЕ ЭТИ ЗНАЧЕНИЯ НА СВОИ ▼▼▼
-  // =============================================
-  const SUPABASE_URL = 'https://ncdajiaffqbmqamrpsfz.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_YxIguOiNADys-g1G6teUwA_qtKYEV6e';
-  // =============================================
+<div id="confirm-modal" class="modal hidden">
+  <div class="modal-content small">
+    <div id="confirm-icon" style="font-size:2rem;margin-bottom:8px">🔄</div>
+    <h2 id="confirm-title">Новая игра?</h2>
+    <p id="confirm-text">Текущая партия будет завершена без сохранения результата.</p>
+    <div class="modal-buttons">
+      <button class="btn-primary" id="confirm-yes">Да, начать</button>
+      <button class="btn-secondary" id="confirm-no">Отмена</button>
+    </div>
+  </div>
+</div>
 
-  const { createClient } = supabase;
-  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// =============================================
+//  КОНФИГУРАЦИЯ SUPABASE
+//  ▼▼▼ ЗАМЕНИТЕ ЭТИ ЗНАЧЕНИЯ НА СВОИ ▼▼▼
+// =============================================
+const SUPABASE_URL = 'https://ncdajiaffqbmqamrpsfz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_YxIguOiNADys-g1G6teUwA_qtKYEV6e';
+// =============================================
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const SUITS = ['♠','♥','♦','♣'];
-  const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-  const RED_SUITS = ['♥','♦'];
+const SUITS = ['♠','♥','♦','♣'];
+const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const RED   = ['♥','♦'];
+const ROYALS = {
+  'J♠':'🧙','J♥':'🤴','J♦':'🤵','J♣':'🧝',
+  'Q♠':'👸','Q♥':'👩‍🦰','Q♦':'🧝‍♀️','Q♣':'🧜‍♀️',
+  'K♠':'👑','K♥':'🤴','K♦':'👨‍🦳','K♣':'🧙‍♂️'
+};
+const CW  = () => window.innerWidth <= 500 ? 46 : 72;
+const CH  = () => window.innerWidth <= 500 ? 67 : 104;
+const OV  = () => window.innerWidth <= 500 ? 20 : 28;
+const WOF = () => window.innerWidth <= 500 ? 14 : 18;
+const SC  = { W2T:5, W2F:10, T2F:10, FLIP:5, STOCK:-2, F2T:-15 };
 
-  const SCORE_WASTE_TO_TABLEAU  = 5;
-  const SCORE_WASTE_TO_FOUND    = 10;
-  const SCORE_TABLEAU_TO_FOUND  = 10;
-  const SCORE_TURN_STOCK        = -2;
-  const SCORE_FOUND_TO_TABLEAU  = -15;
+let playerName='', playerId=null;
+let stock=[], waste=[], foundations=[[],[],[],[]], tableau=[[],[],[],[],[],[],[]];
+let score=0, moves=0, seconds=0;
+let timerInt=null, history=[], sel=null, hintEls=[];
+let autoOffered=false, confirmAction=null;
 
-  let playerName = '';
-  let playerId   = null;
-  let stock      = [];
-  let waste      = [];
-  let foundations= [[],[],[],[]];
-  let tableau    = [[],[],[],[],[],[],[]];
-  let score      = 0;
-  let moves      = 0;
-  let seconds    = 0;
-  let timerInterval = null;
-  let history    = [];
-  let selectedCard = null;
-  let hintHighlight = [];
+const isRed = s => RED.includes(s);
+const ri    = r => RANKS.indexOf(r);
+const clone = o => JSON.parse(JSON.stringify(o));
 
-  function isRed(suit) { return RED_SUITS.includes(suit); }
-  function rankIndex(r) { return RANKS.indexOf(r); }
+function buildDeck(){return SUITS.flatMap(s=>RANKS.map(r=>({suit:s,rank:r,faceUp:false})));}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function snap(){history.push({stock:clone(stock),waste:clone(waste),foundations:clone(foundations),tableau:clone(tableau),score,moves});if(history.length>120)history.shift();}
 
-  function buildDeck() {
-    const deck = [];
-    for (const suit of SUITS)
-      for (const rank of RANKS)
-        deck.push({ suit, rank, faceUp: false });
-    return deck;
+function deal(){
+  clearInterval(timerInt);
+  const deck=shuffle(buildDeck());
+  tableau=[[],[],[],[],[],[],[]]; foundations=[[],[],[],[]];
+  waste=[]; stock=[]; score=0; moves=0; seconds=0; history=[];
+  sel=null; hintEls=[]; autoOffered=false;
+  let idx=0;
+  for(let c=0;c<7;c++) for(let r=0;r<=c;r++){const card=deck[idx++];card.faceUp=(r===c);tableau[c].push(card);}
+  while(idx<deck.length) stock.push(deck[idx++]);
+  render(); timerTick(); timerInt=setInterval(timerTick,1000);
+}
+function timerTick(){seconds++;updateTimerEl();}
+function updateTimerEl(){const m=String(Math.floor((seconds-1)/60)).padStart(2,'0'),s=String((seconds-1)%60).padStart(2,'0');document.getElementById('timer-display').textContent=m+':'+s;}
+
+/* ── КАРТОЧНЫЙ ЭЛЕМЕНТ ── */
+function mkCard(card){
+  const cw=CW(),ch=CH();
+  const el=document.createElement('div');
+  el.className='card '+(isRed(card.suit)?'red':'black');
+  el.style.cssText='width:'+cw+'px;height:'+ch+'px;';
+  el.dataset.rank=card.rank; el.dataset.suit=card.suit;
+  if(!card.faceUp){const b=document.createElement('div');b.className='card-back-face';el.appendChild(b);return el;}
+  const face=document.createElement('div'); face.className='card-face';
+  const tc=document.createElement('div'); tc.className='card-corner top';
+  tc.innerHTML='<span class="rank">'+card.rank+'</span><span class="suit">'+card.suit+'</span>';
+  const bc=document.createElement('div'); bc.className='card-corner bot';
+  bc.innerHTML='<span class="rank">'+card.rank+'</span><span class="suit">'+card.suit+'</span>';
+  face.appendChild(tc);
+  const key=card.rank+card.suit;
+  if(ROYALS[key]){const r=document.createElement('div');r.className='card-royal';r.textContent=ROYALS[key];face.appendChild(r);}
+  else{const a=document.createElement('span');a.className='card-art pip';a.textContent=card.suit;face.appendChild(a);}
+  face.appendChild(bc); el.appendChild(face); return el;
+}
+
+/* ── РЕНДЕР ── */
+function render(){renderStock();renderWaste();renderFoundations();renderTableau();
+  document.getElementById('score-display').textContent=Math.max(0,score);
+  document.getElementById('moves-display').textContent=moves;}
+
+function renderStock(){
+  const el=document.getElementById('stock'); el.innerHTML='';
+  if(stock.length>0){const c=mkCard({suit:'♠',rank:'A',faceUp:false});c.style.position='absolute';el.appendChild(c);}
+  else el.innerHTML='<span class="pile-empty-icon">↺</span>';
+  el.onclick=onStockClick;
+}
+
+function onStockClick(){
+  clearHints(); clearSel(); snap();
+  if(stock.length===0){stock=waste.slice().reverse().map(c=>({...c,faceUp:false}));waste=[];moves++;render();return;}
+  const card=stock.pop(); card.faceUp=true; waste.push(card);
+  score=Math.max(0,score+SC.STOCK); moves++; render();
+}
+
+function renderWaste(){
+  const cont=document.getElementById('waste'); cont.innerHTML='';
+  const cw=CW(), wof=WOF(), show=Math.min(3,waste.length);
+  for(let i=show-1;i>=0;i--){
+    const card=waste[waste.length-1-i];
+    const el=mkCard(card); el.style.position='absolute';
+    el.style.left=(show-1-i)*wof+'px'; el.style.zIndex=show-i;
+    if(i===0){el.onclick=()=>onWasteClick(el,card);setupDrag(el,[card],'waste',-1);}
+    cont.appendChild(el);
   }
+  cont.style.width=cw+(show>0?(show-1)*wof:0)+'px';
+}
 
-  function shuffle(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
+function renderFoundations(){
+  for(let i=0;i<4;i++){
+    const el=document.getElementById('foundation-'+i); el.innerHTML='';
+    if(foundations[i].length>0){const c=mkCard(foundations[i][foundations[i].length-1]);c.style.position='absolute';el.appendChild(c);}
+    else el.innerHTML='<span class="pile-suit">'+['♠','♥','♦','♣'][i]+'</span>';
+    el.onclick=()=>onFoundClick(i);
+    setupDrop(el,cards=>cards.length===1&&canF(cards[0],i),()=>{if(sel)doF(sel.cards[0],i,sel.fromPile,sel.fromIndex);});
+  }
+}
+
+function renderTableau(){
+  const cont=document.getElementById('tableau'); cont.innerHTML='';
+  const cw=CW(),ch=CH(),ov=OV();
+  for(let col=0;col<7;col++){
+    const colEl=document.createElement('div'); colEl.className='tableau-col'; colEl.dataset.col=col;
+    const empty=document.createElement('div'); empty.className='tableau-col-empty';
+    empty.innerHTML='<span style="font-size:.9rem;opacity:.2">K</span>'; colEl.appendChild(empty);
+    colEl.style.width=cw+'px';
+    colEl.style.height=tableau[col].length>0?(tableau[col].length-1)*ov+ch+'px':ch+'px';
+    for(let row=0;row<tableau[col].length;row++){
+      const card=tableau[col][row];
+      const cEl=mkCard(card); cEl.style.position='absolute';
+      cEl.style.top=row*ov+'px'; cEl.style.zIndex=row+1; cEl.style.width=cw+'px';
+      if(card.faceUp){cEl.onclick=()=>onTabClick(col,row);setupDrag(cEl,tableau[col].slice(row),'tableau',col);}
+      colEl.appendChild(cEl);
     }
-    return arr;
+    setupDrop(colEl,cards=>canT(cards[0],col),()=>{if(!sel)return;snap();const cards=sel.cards,from=sel;removeFrom(from);tableau[col].push(...cards);if(from.fromPile==='waste')score+=SC.W2T;else if(from.fromPile==='foundation')score=Math.max(0,score+SC.F2T);moves++;clearSel();render();checkAuto();});
+    colEl.onclick=e=>{if(e.target===colEl||e.target===empty||e.target.classList.contains('pile-empty-icon'))onTabEmpty(col);};
+    cont.appendChild(colEl);
   }
+}
 
-  function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+/* ── КЛИКИ ── */
+function onWasteClick(el,card){
+  clearHints();
+  for(let i=0;i<4;i++){if(canF(card,i)){fly(el,document.getElementById('foundation-'+i),()=>{snap();waste.pop();foundations[i].push(card);score+=SC.W2F;moves++;render();checkWin();checkAuto();});return;}}
+  for(let c=0;c<7;c++){if(canT(card,c)){fly(el,document.querySelectorAll('.tableau-col')[c],()=>{snap();waste.pop();tableau[c].push(card);score+=SC.W2T;moves++;render();checkAuto();});return;}}
+  if(sel?.fromPile==='waste'){clearSel();return;}
+  el.classList.add('selected'); sel={cards:[card],fromPile:'waste',fromIndex:-1};
+}
 
-  function saveHistory() {
-    history.push({
-      stock: deepClone(stock), waste: deepClone(waste),
-      foundations: deepClone(foundations), tableau: deepClone(tableau),
-      score, moves
-    });
-    if (history.length > 100) history.shift();
+function onTabClick(col,row){
+  clearHints();
+  const card=tableau[col][row];
+  if(sel){
+    if(canT(sel.cards[0],col)){const srcEl=getSelEl();fly(srcEl,document.querySelectorAll('.tableau-col')[col],()=>{snap();const cards=sel.cards,from=sel;removeFrom(from);tableau[col].push(...cards);if(from.fromPile==='waste')score+=SC.W2T;else if(from.fromPile==='foundation')score=Math.max(0,score+SC.F2T);moves++;clearSel();render();checkAuto();});return;}
+    clearSel(); if(!card.faceUp)return;
   }
-
-  function dealGame() {
-    clearInterval(timerInterval);
-    const deck = shuffle(buildDeck());
-    tableau    = [[],[],[],[],[],[],[]];
-    foundations= [[],[],[],[],[]];
-    waste      = []; stock = [];
-    score = 0; moves = 0; seconds = 0; history = [];
-    selectedCard = null;
-
-    let idx = 0;
-    for (let col = 0; col < 7; col++)
-      for (let row = 0; row <= col; row++) {
-        const card = deck[idx++];
-        card.faceUp = (row === col);
-        tableau[col].push(card);
-      }
-    while (idx < deck.length) stock.push(deck[idx++]);
-
-    updateDisplay();
-    updateTimer();
-    timerInterval = setInterval(() => { seconds++; updateTimerDisplay(); }, 1000);
+  if(!card.faceUp)return;
+  const group=tableau[col].slice(row);
+  if(group.length===1){
+    for(let i=0;i<4;i++){if(canF(card,i)){const colEl=document.querySelectorAll('.tableau-col')[col];const allEls=Array.from(colEl.querySelectorAll('.card'));const cEl=allEls[allEls.length-1];fly(cEl,document.getElementById('foundation-'+i),()=>{snap();tableau[col].pop();if(tableau[col].length>0&&!tableau[col][tableau[col].length-1].faceUp){tableau[col][tableau[col].length-1].faceUp=true;score+=SC.FLIP;}foundations[i].push(card);score+=SC.T2F;moves++;render();checkWin();checkAuto();});return;}}
   }
+  const colEl=document.querySelectorAll('.tableau-col')[col];
+  const allEls=Array.from(colEl.querySelectorAll('.card'));
+  const faceN=tableau[col].filter(c=>!c.faceUp).length;
+  Array.from(allEls).slice(faceN+(row-faceN)).forEach(e=>e.classList.add('selected'));
+  sel={cards:group,fromPile:'tableau',fromIndex:col};
+}
 
-  function updateDisplay() {
-    renderStock(); renderWaste(); renderFoundations(); renderTableau(); updateScoreDisplay();
-  }
+function onTabEmpty(col){
+  if(!sel)return;
+  if(canT(sel.cards[0],col)){fly(getSelEl(),document.querySelectorAll('.tableau-col')[col],()=>{snap();const cards=sel.cards,from=sel;removeFrom(from);tableau[col].push(...cards);if(from.fromPile==='waste')score+=SC.W2T;else if(from.fromPile==='foundation')score=Math.max(0,score+SC.F2T);moves++;clearSel();render();checkAuto();});}
+  else clearSel();
+}
 
-  function createCardEl(card, extra = '') {
-    const el = document.createElement('div');
-    el.className = 'card' + (isRed(card.suit) ? ' red' : ' black') + extra;
-    el.dataset.rank = card.rank; el.dataset.suit = card.suit;
-    el.innerHTML = `
-      <span class="card-corner top">${card.rank}<br>${card.suit}</span>
-      <span class="card-center">${card.suit}</span>
-      <span class="card-corner bottom">${card.rank}<br>${card.suit}</span>`;
-    return el;
-  }
+function onFoundClick(i){
+  if(!sel)return; if(sel.cards.length!==1){clearSel();return;}
+  const card=sel.cards[0];
+  if(canF(card,i))doF(card,i,sel.fromPile,sel.fromIndex); else clearSel();
+}
 
-  function createCardBackEl() {
-    const el = document.createElement('div');
-    el.className = 'card back';
-    return el;
-  }
-
-  function renderStock() {
-    const el = document.getElementById('stock');
-    el.innerHTML = '';
-    if (stock.length > 0) {
-      el.appendChild(createCardBackEl());
-      el.classList.remove('empty');
-    } else {
-      el.innerHTML = '<span class="pile-empty-icon">↺</span>';
-      el.classList.add('empty');
-    }
-  }
-
-  function renderWaste() {
-    const el = document.getElementById('waste');
-    el.innerHTML = '';
-    if (waste.length > 0) {
-      const card = waste[waste.length - 1];
-      const cardEl = createCardEl(card);
-      cardEl.addEventListener('click', () => onWasteClick(cardEl, card));
-      el.appendChild(cardEl);
-    }
-  }
-
-  function renderFoundations() {
-    for (let i = 0; i < 4; i++) {
-      const el = document.getElementById(`foundation-${i}`);
-      el.innerHTML = '';
-      if (foundations[i].length > 0) {
-        el.appendChild(createCardEl(foundations[i][foundations[i].length - 1]));
-      } else {
-        el.innerHTML = `<span class="pile-suit">${['♠','♥','♦','♣'][i]}</span>`;
-      }
-    }
-  }
-
-  function renderTableau() {
-    const container = document.getElementById('tableau');
-    container.innerHTML = '';
-    for (let col = 0; col < 7; col++) {
-      const colEl = document.createElement('div');
-      colEl.className = 'tableau-col';
-      colEl.dataset.col = col;
-
-      if (tableau[col].length === 0) {
-        colEl.classList.add('empty');
-        colEl.innerHTML = '<span class="pile-empty-icon">K</span>';
-        colEl.addEventListener('click', () => onTableauColClick(col, null, -1));
-      }
-
-      tableau[col].forEach((card, rowIdx) => {
-        let cardEl;
-        if (!card.faceUp) { cardEl = createCardBackEl(); }
-        else {
-          cardEl = createCardEl(card);
-          cardEl.addEventListener('click', () => onTableauColClick(col, card, rowIdx));
-        }
-        cardEl.style.top = `${rowIdx * 28}px`;
-        cardEl.classList.add('tableau-card');
-        colEl.appendChild(cardEl);
-      });
-
-      colEl.style.height = tableau[col].length > 0
-        ? `${(tableau[col].length - 1) * 28 + 120}px` : '120px';
-      container.appendChild(colEl);
-    }
-  }
-
-  function updateScoreDisplay() {
-    document.getElementById('score-display').textContent = Math.max(0, score);
-    document.getElementById('moves-display').textContent = moves;
-  }
-
-  function updateTimerDisplay() {
-    const m = String(Math.floor(seconds / 60)).padStart(2, '0');
-    const s = String(seconds % 60).padStart(2, '0');
-    document.getElementById('timer-display').textContent = `${m}:${s}`;
-  }
-
-  function updateTimer() { updateTimerDisplay(); }
-
-  function clearSelection() {
-    selectedCard = null;
-    document.querySelectorAll('.card.selected').forEach(el => el.classList.remove('selected'));
-  }
-
-  function clearHints() {
-    hintHighlight.forEach(el => el && el.classList.remove('hint'));
-    hintHighlight = [];
-  }
-
-  document.getElementById('stock').addEventListener('click', () => {
-    clearHints(); clearSelection();
-    if (stock.length === 0) {
-      saveHistory();
-      stock = waste.slice().reverse().map(c => ({ ...c, faceUp: false }));
-      waste = []; moves++; updateDisplay(); return;
-    }
-    saveHistory();
-    const card = stock.pop();
-    card.faceUp = true;
-    waste.push(card);
-    score = Math.max(0, score + SCORE_TURN_STOCK);
-    moves++; updateDisplay();
+function doF(card,fIdx,fromPile,fromIndex){
+  const srcEl=getSelEl();
+  fly(srcEl,document.getElementById('foundation-'+fIdx),()=>{
+    snap();
+    if(fromPile==='waste'){waste.pop();score+=SC.W2F;}
+    else if(fromPile==='tableau'){tableau[fromIndex].pop();if(tableau[fromIndex].length>0&&!tableau[fromIndex][tableau[fromIndex].length-1].faceUp){tableau[fromIndex][tableau[fromIndex].length-1].faceUp=true;score+=SC.FLIP;}score+=SC.T2F;}
+    foundations[fIdx].push(card);moves++;clearSel();render();checkWin();checkAuto();
   });
+}
 
-  function onWasteClick(el, card) {
-    clearHints();
-    if (selectedCard) { clearSelection(); return; }
-    el.classList.add('selected');
-    selectedCard = { cards: [card], fromPile: 'waste', fromIndex: -1, element: el };
-  }
+function removeFrom(from){
+  if(from.fromPile==='waste'){waste.pop();}
+  else if(from.fromPile==='tableau'){const col=from.fromIndex;tableau[col]=tableau[col].slice(0,tableau[col].length-from.cards.length);if(tableau[col].length>0&&!tableau[col][tableau[col].length-1].faceUp){tableau[col][tableau[col].length-1].faceUp=true;score+=SC.FLIP;}}
+  else if(from.fromPile==='foundation'){foundations[from.fromIndex].pop();}
+}
 
-  for (let i = 0; i < 4; i++) {
-    document.getElementById(`foundation-${i}`).addEventListener('click', () => {
-      clearHints();
-      if (!selectedCard) return;
-      if (selectedCard.cards.length !== 1) { clearSelection(); return; }
-      const card = selectedCard.cards[0];
-      if (canPlaceOnFoundation(card, i)) {
-        saveHistory();
-        removeSelectedFromSource();
-        foundations[i].push(card);
-        score += selectedCard.fromPile === 'waste' ? SCORE_WASTE_TO_FOUND : SCORE_TABLEAU_TO_FOUND;
-        moves++; clearSelection(); updateDisplay(); checkWin();
-      } else { clearSelection(); }
-    });
-  }
+/* ── ПРАВИЛА ── */
+function canF(card,i){const p=foundations[i];if(p.length===0)return card.rank==='A';const t=p[p.length-1];return t.suit===card.suit&&ri(card.rank)===ri(t.rank)+1;}
+function canT(card,col){const p=tableau[col];if(p.length===0)return card.rank==='K';const t=p[p.length-1];if(!t.faceUp)return false;return isRed(card.suit)!==isRed(t.suit)&&ri(card.rank)===ri(t.rank)-1;}
 
-  function onTableauColClick(col, card, rowIdx) {
-    clearHints();
-    if (selectedCard) {
-      if (canPlaceOnTableau(selectedCard.cards[0], col)) {
-        saveHistory();
-        const cards = selectedCard.cards;
-        removeSelectedFromSource();
-        tableau[col].push(...cards);
-        if (selectedCard.fromPile === 'waste') score += SCORE_WASTE_TO_TABLEAU;
-        else if (selectedCard.fromPile === 'foundation') score = Math.max(0, score + SCORE_FOUND_TO_TABLEAU);
-        moves++; clearSelection(); updateDisplay();
-      } else {
-        clearSelection();
-        if (card && card.faceUp) selectTableauCard(col, card, rowIdx);
-      }
-      return;
-    }
-    if (!card || !card.faceUp) return;
-    selectTableauCard(col, card, rowIdx);
-  }
+/* ── ВЫДЕЛЕНИЕ/ПОДСВЕТКА ── */
+function clearSel(){sel=null;document.querySelectorAll('.card.selected').forEach(e=>e.classList.remove('selected'));}
+function clearHints(){hintEls.forEach(e=>e&&e.classList.remove('hint-glow'));hintEls=[];}
+function getSelEl(){const els=document.querySelectorAll('.card.selected');return els.length?els[0]:null;}
 
-  function selectTableauCard(col, card, rowIdx) {
-    const cards = tableau[col].slice(rowIdx);
-    const colEl = document.querySelectorAll('.tableau-col')[col];
-    const cardEls = colEl.querySelectorAll('.card:not(.back)');
-    const offset = tableau[col].filter(c => !c.faceUp).length;
-    const relIdx = rowIdx - offset;
-    Array.from(cardEls).slice(relIdx).forEach(el => el.classList.add('selected'));
-    selectedCard = { cards, fromPile: 'tableau', fromIndex: col };
-  }
+/* ── АНИМАЦИЯ ── */
+function fly(srcEl,tgtEl,cb){
+  if(!srcEl){cb();return;}
+  const sr=srcEl.getBoundingClientRect(),tr=tgtEl.getBoundingClientRect();
+  const g=srcEl.cloneNode(true);
+  g.classList.remove('selected','hint-glow'); g.classList.add('card-flying');
+  g.style.left=sr.left+'px'; g.style.top=sr.top+'px';
+  g.style.width=sr.width+'px'; g.style.height=sr.height+'px'; g.style.margin='0';
+  document.body.appendChild(g); srcEl.style.opacity='0';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{g.style.left=tr.left+'px';g.style.top=tr.top+'px';}));
+  g.addEventListener('transitionend',()=>{g.remove();srcEl.style.opacity='';cb();},{once:true});
+}
 
-  function canPlaceOnFoundation(card, fIdx) {
-    const pile = foundations[fIdx];
-    if (pile.length === 0) return card.rank === 'A';
-    const top = pile[pile.length - 1];
-    return top.suit === card.suit && rankIndex(card.rank) === rankIndex(top.rank) + 1;
-  }
-
-  function canPlaceOnTableau(card, col) {
-    const pile = tableau[col];
-    if (pile.length === 0) return card.rank === 'K';
-    const top = pile[pile.length - 1];
-    if (!top.faceUp) return false;
-    return isRed(card.suit) !== isRed(top.suit) && rankIndex(card.rank) === rankIndex(top.rank) - 1;
-  }
-
-  function removeSelectedFromSource() {
-    if (selectedCard.fromPile === 'waste') {
-      waste.pop();
-    } else if (selectedCard.fromPile === 'tableau') {
-      const col = selectedCard.fromIndex;
-      tableau[col] = tableau[col].slice(0, tableau[col].length - selectedCard.cards.length);
-      if (tableau[col].length > 0 && !tableau[col][tableau[col].length - 1].faceUp) {
-        tableau[col][tableau[col].length - 1].faceUp = true;
-        score += 5;
-      }
-    } else if (selectedCard.fromPile === 'foundation') {
-      foundations[selectedCard.fromIndex].pop();
-    }
-  }
-
-  document.getElementById('undo-btn').addEventListener('click', () => {
-    clearHints(); clearSelection();
-    if (history.length === 0) return;
-    const prev = history.pop();
-    stock = prev.stock; waste = prev.waste;
-    foundations = prev.foundations; tableau = prev.tableau;
-    score = prev.score; moves = prev.moves;
-    updateDisplay();
+/* ── DRAG & DROP ── */
+function setupDrag(el,cards,fromPile,fromIndex){
+  el.setAttribute('draggable','true');
+  el.addEventListener('dragstart',e=>{
+    e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain','drag');
+    clearHints(); clearSel(); sel={cards,fromPile,fromIndex};
+    setTimeout(()=>el.classList.add('dragging'),0);
   });
+  el.addEventListener('dragend',()=>{document.querySelectorAll('.dragging').forEach(e=>e.classList.remove('dragging'));document.querySelectorAll('.drop-target').forEach(e=>e.classList.remove('drop-target'));if(sel)clearSel();});
+}
+function setupDrop(el,canDrop,onDrop){
+  el.addEventListener('dragover',e=>{if(!sel)return;if(canDrop(sel.cards)){e.preventDefault();el.classList.add('drop-target');}});
+  el.addEventListener('dragleave',()=>el.classList.remove('drop-target'));
+  el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('drop-target');if(!sel)return;if(canDrop(sel.cards))onDrop(sel.cards);else clearSel();});
+}
 
-  document.getElementById('new-game-btn').addEventListener('click', () => {
-    clearInterval(timerInterval); dealGame();
-  });
-  document.getElementById('win-new-game').addEventListener('click', () => {
-    document.getElementById('win-modal').classList.add('hidden'); dealGame();
-  });
-  document.getElementById('hint-new-game').addEventListener('click', () => {
-    document.getElementById('hint-modal').classList.add('hidden'); dealGame();
-  });
-  document.getElementById('hint-close').addEventListener('click', () => {
-    document.getElementById('hint-modal').classList.add('hidden');
-  });
+/* ── ПОДСКАЗКА ── */
+document.getElementById('hint-btn').addEventListener('click',()=>{
+  clearSel(); clearHints();
+  const hint=findHint();
+  if(!hint){showConfirm('😔','Нет доступных ходов','Видимых ходов не найдено. Начать новую игру?','Новая игру','Отмена',()=>deal(),null);return;}
+  if(hint.src)hint.src.forEach(e=>{e.classList.add('hint-glow');hintEls.push(e);});
+  if(hint.tgt){hint.tgt.classList.add('hint-glow');hintEls.push(hint.tgt);}
+  setTimeout(clearHints,3000);
+});
 
-  document.getElementById('hint-btn').addEventListener('click', () => {
-    clearSelection(); clearHints();
-    const hint = findHint();
-    const modal = document.getElementById('hint-modal');
-    const newGameBtn = document.getElementById('hint-new-game');
-    const closeBtn   = document.getElementById('hint-close');
-    if (!hint) {
-      document.getElementById('hint-text').textContent = '😔 Нет доступных ходов. Начать новую игру?';
-      newGameBtn.classList.remove('hidden');
-      closeBtn.textContent = 'Отмена';
-    } else {
-      document.getElementById('hint-text').textContent = `💡 ${hint.description}`;
-      newGameBtn.classList.add('hidden');
-      closeBtn.textContent = 'Понятно';
-      if (hint.sourceEl) { hint.sourceEl.classList.add('hint'); hintHighlight.push(hint.sourceEl); }
-      if (hint.targetEl) { hint.targetEl.classList.add('hint'); hintHighlight.push(hint.targetEl); }
-    }
-    modal.classList.remove('hidden');
-  });
+function findHint(){
+  const tcols=document.querySelectorAll('.tableau-col');
+  const fEl=i=>document.getElementById('foundation-'+i);
+  const wEl=()=>{const cs=document.getElementById('waste').querySelectorAll('.card');return cs.length?[cs[cs.length-1]]:null;};
+  const tTopEl=col=>{const cards=Array.from(tcols[col].querySelectorAll('.card')).filter(e=>!e.querySelector('.card-back-face'));return cards.length?[cards[cards.length-1]]:null;};
+  const tGroupEls=(col,row)=>{const all=Array.from(tcols[col].querySelectorAll('.card'));const fn=tableau[col].filter(c=>!c.faceUp).length;return all.slice(fn+(row-fn));};
 
-  function findHint() {
-    if (waste.length > 0) {
-      const card = waste[waste.length - 1];
-      for (let i = 0; i < 4; i++)
-        if (canPlaceOnFoundation(card, i))
-          return { description: `${card.rank}${card.suit} → фундамент`, sourceEl: getWasteEl(), targetEl: getFoundationEl(i) };
-    }
-    for (let col = 0; col < 7; col++) {
-      if (!tableau[col].length) continue;
-      const card = tableau[col][tableau[col].length - 1];
-      if (!card.faceUp) continue;
-      for (let i = 0; i < 4; i++)
-        if (canPlaceOnFoundation(card, i))
-          return { description: `${card.rank}${card.suit} → фундамент`, sourceEl: getTableauTopEl(col), targetEl: getFoundationEl(i) };
-    }
-    if (waste.length > 0) {
-      const card = waste[waste.length - 1];
-      for (let col = 0; col < 7; col++)
-        if (canPlaceOnTableau(card, col))
-          return { description: `${card.rank}${card.suit} из отбоя → колонка ${col + 1}`, sourceEl: getWasteEl(), targetEl: getTableauColEl(col) };
-    }
-    for (let fromCol = 0; fromCol < 7; fromCol++) {
-      const col = tableau[fromCol];
-      for (let rowIdx = 0; rowIdx < col.length; rowIdx++) {
-        const card = col[rowIdx];
-        if (!card.faceUp) continue;
-        for (let toCol = 0; toCol < 7; toCol++) {
-          if (toCol === fromCol) continue;
-          if (canPlaceOnTableau(card, toCol)) {
-            const revealsCard = rowIdx > 0 && !col[rowIdx - 1].faceUp;
-            const isKingToEmpty = card.rank === 'K' && tableau[toCol].length === 0;
-            if (revealsCard || isKingToEmpty || rowIdx === col.length - 1)
-              return { description: `${card.rank}${card.suit} → колонка ${toCol + 1}`, sourceEl: getTableauTopEl(fromCol), targetEl: getTableauColEl(toCol) };
-          }
-        }
-      }
-    }
-    for (let fi = 0; fi < 4; fi++) {
-      if (!foundations[fi].length) continue;
-      const card = foundations[fi][foundations[fi].length - 1];
-      for (let col = 0; col < 7; col++)
-        if (canPlaceOnTableau(card, col))
-          return { description: `${card.rank}${card.suit} с фундамента → колонка ${col + 1}`, sourceEl: getFoundationEl(fi), targetEl: getTableauColEl(col) };
-    }
-    if (stock.length > 0)
-      return { description: '↺ Откройте следующую карту из колоды', sourceEl: document.getElementById('stock'), targetEl: null };
-    return null;
+  if(waste.length>0){const card=waste[waste.length-1];for(let i=0;i<4;i++)if(canF(card,i))return{src:wEl(),tgt:fEl(i)};}
+  for(let c=0;c<7;c++){if(!tableau[c].length)continue;const card=tableau[c][tableau[c].length-1];if(!card.faceUp)continue;for(let i=0;i<4;i++)if(canF(card,i))return{src:tTopEl(c),tgt:fEl(i)};}
+  if(waste.length>0){const card=waste[waste.length-1];for(let c=0;c<7;c++)if(canT(card,c))return{src:wEl(),tgt:tcols[c]};}
+  for(let fc=0;fc<7;fc++)for(let row=0;row<tableau[fc].length;row++){const card=tableau[fc][row];if(!card.faceUp)continue;for(let tc=0;tc<7;tc++){if(tc===fc)continue;if(canT(card,tc)){const rev=row>0&&!tableau[fc][row-1].faceUp,ke=card.rank==='K'&&tableau[tc].length===0;if(rev||ke||(row===tableau[fc].length-1))return{src:tGroupEls(fc,row),tgt:tcols[tc]};}}}
+  for(let fi=0;fi<4;fi++){if(!foundations[fi].length)continue;const card=foundations[fi][foundations[fi].length-1];for(let c=0;c<7;c++)if(canT(card,c))return{src:[fEl(fi)],tgt:tcols[c]};}
+  if(stock.length>0)return{src:[document.getElementById('stock')],tgt:null};
+  return null;
+}
+
+/* ── АВТОКОМПЛИТ ── */
+function checkAuto(){
+  if(autoOffered)return;
+  const allOpen=tableau.every(col=>col.every(c=>c.faceUp))&&waste.length===0&&stock.length===0;
+  if(!allOpen)return;
+  autoOffered=true; clearInterval(timerInt);
+  document.getElementById('autocomplete-modal').classList.remove('hidden');
+}
+
+document.getElementById('autocomplete-yes').addEventListener('click',()=>{
+  document.getElementById('autocomplete-modal').classList.add('hidden'); runAuto();
+});
+document.getElementById('autocomplete-no').addEventListener('click',()=>{
+  document.getElementById('autocomplete-modal').classList.add('hidden');
+  timerInt=setInterval(timerTick,1000);
+});
+
+function runAuto(){
+  function step(){
+    let moved=false;
+    for(let c=0;c<7;c++){if(!tableau[c].length)continue;const card=tableau[c][tableau[c].length-1];for(let i=0;i<4;i++){if(canF(card,i)){tableau[c].pop();foundations[i].push(card);score+=SC.T2F;moves++;moved=true;}}}
+    if(waste.length>0){const card=waste[waste.length-1];for(let i=0;i<4;i++){if(canF(card,i)){waste.pop();foundations[i].push(card);score+=SC.W2F;moves++;moved=true;}}}
+    render();
+    if(foundations.reduce((s,f)=>s+f.length,0)===52){finishWin();return;}
+    if(moved)setTimeout(step,110);
   }
+  step();
+}
 
-  function getWasteEl()        { return document.getElementById('waste').querySelector('.card'); }
-  function getFoundationEl(i)  { return document.getElementById(`foundation-${i}`); }
-  function getTableauTopEl(col) {
-    const colEl = document.querySelectorAll('.tableau-col')[col];
-    const cards = colEl.querySelectorAll('.card:not(.back)');
-    return cards.length ? cards[cards.length - 1] : colEl;
-  }
-  function getTableauColEl(col) { return document.querySelectorAll('.tableau-col')[col]; }
+/* ── ПОБЕДА ── */
+function checkWin(){if(foundations.reduce((s,f)=>s+f.length,0)===52)finishWin();}
+function finishWin(){
+  clearInterval(timerInt);
+  const bonus=Math.max(0,Math.round(700000/Math.max(seconds,1)));
+  const final=Math.max(0,score)+bonus;
+  document.getElementById('win-score').textContent=final;
+  document.getElementById('win-time').textContent=document.getElementById('timer-display').textContent;
+  document.getElementById('win-moves').textContent=moves;
+  document.getElementById('win-modal').classList.remove('hidden');
+  saveGame(final,true);
+}
 
-  function checkWin() {
-    if (foundations.reduce((s, f) => s + f.length, 0) === 52) {
-      clearInterval(timerInterval);
-      const timeBonus = Math.max(0, 700000 / Math.max(seconds, 1));
-      const finalScore = Math.round(Math.max(0, score) + timeBonus);
-      document.getElementById('win-score').textContent = finalScore;
-      document.getElementById('win-time').textContent = document.getElementById('timer-display').textContent;
-      document.getElementById('win-moves').textContent = moves;
-      document.getElementById('win-modal').classList.remove('hidden');
-      saveGameResult(finalScore, true);
-    }
-  }
+/* ── ПОДТВЕРЖДЕНИЕ ── */
+function showConfirm(icon,title,text,yesLabel,noLabel,onYes,onNo){
+  document.getElementById('confirm-icon').textContent=icon;
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-text').textContent=text;
+  document.getElementById('confirm-yes').textContent=yesLabel;
+  document.getElementById('confirm-no').textContent=noLabel;
+  confirmAction={onYes,onNo};
+  document.getElementById('confirm-modal').classList.remove('hidden');
+}
+document.getElementById('confirm-yes').addEventListener('click',()=>{
+  document.getElementById('confirm-modal').classList.add('hidden');
+  if(confirmAction?.onYes)confirmAction.onYes();
+});
+document.getElementById('confirm-no').addEventListener('click',()=>{
+  document.getElementById('confirm-modal').classList.add('hidden');
+  if(confirmAction?.onNo)confirmAction.onNo();
+});
 
-  async function getOrCreatePlayer(name) {
-    const { data: existing } = await db.from('players').select('id').eq('name', name).maybeSingle();
-    if (existing) return existing.id;
-    const { data: created } = await db.from('players').insert({ name }).select('id').single();
-    return created?.id || null;
-  }
+/* ── КНОПКИ ── */
+document.getElementById('undo-btn').addEventListener('click',()=>{
+  clearHints();clearSel();if(!history.length)return;
+  const p=history.pop();stock=p.stock;waste=p.waste;foundations=p.foundations;tableau=p.tableau;score=p.score;moves=p.moves;render();
+});
+document.getElementById('new-game-btn').addEventListener('click',()=>{
+  clearHints();clearSel();
+  showConfirm('🔄','Новая игра?','Текущая партия будет завершена без сохранения.','Да, начать','Отмена',()=>deal(),null);
+});
+document.getElementById('win-new-game').addEventListener('click',()=>{document.getElementById('win-modal').classList.add('hidden');deal();});
 
-  async function saveGameResult(finalScore, completed) {
-    if (!playerId) return;
-    await db.from('games').insert({
-      player_id: playerId, score: Math.max(0, finalScore),
-      duration_seconds: seconds, moves, completed
-    });
-  }
+/* ── SUPABASE ── */
+async function getOrCreate(name){
+  const{data:ex}=await db.from('players').select('id').eq('name',name).maybeSingle();
+  if(ex)return ex.id;
+  const{data:cr}=await db.from('players').insert({name}).select('id').single();
+  return cr?.id||null;
+}
+async function saveGame(sc,completed){
+  if(!playerId)return;
+  await db.from('games').insert({player_id:playerId,score:Math.max(0,sc),duration_seconds:Math.max(0,seconds-1),moves,completed});
+}
 
-  document.getElementById('start-btn').addEventListener('click', async () => {
-    const name = document.getElementById('player-name-input').value.trim();
-    if (!name) { document.getElementById('player-name-input').focus(); return; }
-    playerName = name;
-    playerId   = await getOrCreatePlayer(name);
-    document.getElementById('name-screen').classList.add('hidden');
-    document.getElementById('game-screen').classList.remove('hidden');
-    dealGame();
-  });
-
-  document.getElementById('player-name-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('start-btn').click();
-  });
-
-  window.addEventListener('beforeunload', () => {
-    if (playerId && moves > 0) saveGameResult(Math.max(0, score), false);
-  });
-  </script>
+/* ── СТАРТ ── */
+document.getElementById('start-btn').addEventListener('click',async()=>{
+  const name=document.getElementById('player-name-input').value.trim();
+  if(!name){document.getElementById('player-name-input').focus();return;}
+  playerName=name; playerId=await getOrCreate(name);
+  document.getElementById('name-screen').classList.add('hidden');
+  document.getElementById('game-screen').classList.remove('hidden');
+  deal();
+});
+document.getElementById('player-name-input').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('start-btn').click();});
+window.addEventListener('beforeunload',()=>{if(playerId&&moves>0)saveGame(Math.max(0,score),false);});
+</script>
 </body>
 </html>
