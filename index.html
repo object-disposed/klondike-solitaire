@@ -311,6 +311,13 @@ function renderFound(){
     const el=document.getElementById('f'+i); el.innerHTML='';
     if(found[i].length>0){
       const c=mkCard(found[i][found[i].length-1]); c.style.position='absolute'; el.appendChild(c);
+      // Добавляем возможность перетаскивания
+      setupPointerDrag(c, [found[i][found[i].length-1]], 'foundation', i);
+      // Добавляем обработчик клика на карту
+      c.onclick = (e) => {
+        e.stopPropagation();
+        onFoundationCardClick(i, found[i][found[i].length-1]);
+      };
     } else {
       el.innerHTML='<span class="pile-suit">'+SUITS[i]+'</span>';
     }
@@ -365,8 +372,8 @@ function renderTab(){
 function tryAutoMove(group, fromPile, fromIdx, fromRow, onMoved){
   const card = group[0];
 
-  // Одиночная → сначала фундамент
-  if(group.length === 1){
+  // Одиночная → сначала фундамент (только если карта не из фундамента)
+  if(group.length === 1 && fromPile !== 'foundation'){
     for(let i=0;i<4;i++){
       if(canF(card,i)){ onMoved('foundation',i); return true; }
     }
@@ -481,7 +488,38 @@ function onTabEmpty(col){
   } else clearSel();
 }
 
-// ── КЛИК: ФУНДАМЕНТ ─────────────────────────────────────
+// ── КЛИК: ФУНДАМЕНТ (новая функция) ─────────────────────
+function onFoundationCardClick(i, card) {
+  clearHints();
+  if (sel) clearSel(); // Если было выделение, сбрасываем, так как работаем с этой картой
+
+  // Пытаемся автоматически переместить карту в подходящее место (только в табло, т.к. в основу запретили)
+  const moved = tryAutoMove([card], 'foundation', i, 0, (destType, destIdx) => {
+    if (destType === 'tableau') {
+      const srcEl = document.querySelector(`#f${i} .card`);
+      fly(srcEl, tabColEl(destIdx), () => {
+        snap();
+        found[i].pop();               // убираем из основы
+        tab[destIdx].push(card);       // кладём в колонку
+        score = Math.max(0, score + SC.F2T); // штраф за ход из основы
+        moves++;
+        render();
+        checkAuto();
+      });
+    }
+  });
+
+  if (!moved) {
+    // Если автоход не удался, выделяем карту
+    const el = document.querySelector(`#f${i} .card`);
+    if (el) {
+      el.classList.add('selected');
+      sel = { cards: [card], fromPile: 'foundation', fromIdx: i };
+    }
+  }
+}
+
+// ── КЛИК: ФУНДАМЕНТ (оригинальная, для слота) ───────────
 function onFoundClick(i){
   if(!sel) return;
   if(sel.cards.length!==1){ clearSel(); return; }
